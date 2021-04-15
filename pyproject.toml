@@ -23,6 +23,12 @@ rstcheck = {version = "*", optional = true}
 black = {version = "*", optional = true}
 black-nb = {version = "*", optional = true}
 isort = {version = "*", optional = true}
+pandas = "^1.2.4"
+pandera = "^0.6.3"
+geopandas = "^0.9.0"
+folium = "^0.12.1"
+matplotlib = "^3.4.1"
+pdvega = "^0.1"
 
 [tool.poetry.dev-dependencies]
 nox = "*"
