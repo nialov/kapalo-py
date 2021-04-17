@@ -29,6 +29,7 @@ geopandas = "^0.9.0"
 folium = "^0.12.1"
 matplotlib = "^3.4.1"
 pdvega = "^0.1"
+Markdown = "^3.3.4"
 
 [tool.poetry.dev-dependencies]
 nox = "*"
