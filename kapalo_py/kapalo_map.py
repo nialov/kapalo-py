@@ -2,7 +2,9 @@
 Making spatial maps.
 """
 
+import logging
 import folium
+from itertools import compress
 import pandas as pd
 from typing import List, Tuple
 from pathlib import Path
@@ -75,21 +77,24 @@ def gather_observation_data(kapalo_tables: KapaloTables) -> List[Observation]:
 
     observations = []
 
-    for obs_id, latitude, longitude in zip(
+    for obs_id, latitude, longitude, remarks in zip(
         kapalo_tables.observations[Columns.OBS_ID].values,
         kapalo_tables.observations[Columns.LATITUDE].values,
         kapalo_tables.observations[Columns.LONGITUDE].values,
+        kapalo_tables.observations[Columns.REMARKS].values,
     ):
 
         assert isinstance(obs_id, str)
         assert isinstance(latitude, float)
         assert isinstance(longitude, float)
+        assert isinstance(remarks, str)
 
         observation = create_observation(
             group_tables=group_tables,
             obs_id=obs_id,
             latitude=latitude,
             longitude=longitude,
+            remarks=remarks,
         )
 
         observations.append(observation)
@@ -133,20 +138,85 @@ def dataframe_to_markdown(dataframe: pd.DataFrame) -> str:
     return markdown_str
 
 
-def observation_html(observation: Observation):
+def observation_image_markdown(observation: Observation, imgs_path: Path) -> str:
+    """
+    Create markdown for images.
+    """
+    markdown_text = "\n"
+
+    if Columns.PICTURE_ID not in observation.images.columns:
+        return markdown_text
+
+    # Get all images in imgs_path
+    # TODO: Do not get img paths multiple times
+    img_paths = list(imgs_path.glob("*.jpg"))
+
+    # Iterate over image ids in observation
+    for idx, (image_id, image_caption) in enumerate(
+        zip(
+            observation.images[Columns.PICTURE_ID].values,
+            observation.images[Columns.REMARKS].values,
+        )
+    ):
+
+        assert isinstance(image_caption, str)
+
+        # Add linebreak
+        markdown_text += "\n"
+
+        # assert type
+        assert isinstance(image_id, str)
+
+        # Get boolean list of matches
+        matches = [image_id in img_path.stem for img_path in img_paths]
+
+        # Report no matches
+        if sum(matches) != 1:
+            logging.error(f"No match for image id {image_id} in {imgs_path}")
+            return "\n"
+
+        # Only one match exists, compress img_paths to that match path
+        match: List[Path] = list(compress(img_paths, matches))
+        assert len(match) == 1
+        match_path = match[0]
+        # One image match, correct
+
+        # Add image markdown text to markdown_text
+        # Example link inside markdown image:
+        # <img src="http://www.google.com.au/images/nav_logo7.png">
+        if idx < 2:
+            markdown_text += f"[![{image_caption}]({match_path})]({match_path})"
+            markdown_text += image_caption
+        else:
+            markdown_text += f"[{image_caption, image_id}]({match_path})"
+
+    return markdown_text
+
+
+def observation_html(observation: Observation, imgs_path: Path):
     """
     Create html summary of observation.
     """
     markdown_text = f"### {observation.obs_id}\n"
 
+    # Tectonic measurements
     for dataframe in (observation.planars, observation.linears):
+        markdown_text += "\n"
         markdown_text += dataframe_to_markdown(dataframe=dataframe)
 
+    markdown_text += observation.remarks
+
+    markdown_text += observation_image_markdown(
+        observation=observation, imgs_path=imgs_path
+    )
+
     html = markdown.markdown(markdown_text, extensions=["tables"])
+
+    html = html.replace("src=", "height=150 src=")
     return html
 
 
-def create_project_map(kapalo_tables: KapaloTables, project: str):
+def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Path):
     """
     Create folium map for project observations.
     """
@@ -164,13 +234,23 @@ def create_project_map(kapalo_tables: KapaloTables, project: str):
         # rotation = dip_dir - 90 if dip_dir > 90 else 270 + dip_dir
         # rock_name = row["ROCK_NAME_TEXT"]
         # measurement = f"{dip_dir:>3}/{dip:>2}".replace(" ", "0")
+        lineation_dir = (
+            observation.linears[Columns.DIRECTION].values[0]
+            if not observation.linears.empty
+            else 0.0
+        )
+        if not isinstance(lineation_dir, (float, int)):
+            assert hasattr(lineation_dir, "item")
+            lineation_dir = lineation_dir.item()  # type: ignore
         folium.Marker(
             location=[observation.latitude, observation.longitude],
             popup=folium.Popup(
-                observation_html(observation=observation), parse_html=False
+                observation_html(observation=observation, imgs_path=imgs_path),
+                parse_html=False,
             ),
             icon=folium.Icon(
-                icon="glyphicon-chevron-right",
+                icon="glyphicon-arrow-up",
+                angle=lineation_dir,
             ),
             tooltip=str(observation.obs_id),
         ).add_to(map)

@@ -3,6 +3,8 @@ Invoke tasks.
 
 Most tasks employ nox to create a virtual session for testing.
 """
+from pathlib import Path
+from shutil import copy
 from invoke import task
 from invoke import UnexpectedExit
 
@@ -106,3 +108,26 @@ def make(_):
     """
     print("---------------")
     print("make successful.")
+
+
+@task
+def kapalo_update(c):
+    """
+    Download and update kapalo test data.
+    """
+    # kapalo.sqlite and backup paths
+    kapalo_sql_path = Path("tests/sample_data/kapalo_sql/kapalo.sqlite")
+    kapalo_sql_backup_path = Path("tests/sample_data/kapalo.sqlite.backup")
+
+    # Remove old backup
+    kapalo_sql_backup_path.unlink(missing_ok=True)
+
+    if kapalo_sql_path.exists():
+        # backup current
+        copy(kapalo_sql_path, kapalo_sql_backup_path)
+
+    # Download new kapalo.sqlite
+    c.run("rclone sync nialovdrive:kapalo_sql tests/sample_data/kapalo_sql")
+
+    # Download images
+    c.run("rclone sync nialovdrive:kapalo_imgs tests/sample_data/kapalo_imgs")

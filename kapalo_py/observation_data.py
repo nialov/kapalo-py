@@ -22,6 +22,7 @@ class Observation:
     gdb_id: str
     latitude: float
     longitude: float
+    remarks: str
     planars: pd.DataFrame = pd.DataFrame()
     linears: pd.DataFrame = pd.DataFrame()
     images: pd.DataFrame = pd.DataFrame()
@@ -73,6 +74,7 @@ def create_observation(
     obs_id: str,
     latitude: float,
     longitude: float,
+    remarks: str,
 ) -> Observation:
     """
     Create Observation from data.
@@ -83,24 +85,24 @@ def create_observation(
     gdb_id = resolve_tm_gid(tectonics=tectonics)
     if gdb_id is None:
         return Observation(
-            obs_id=obs_id, gdb_id="", latitude=latitude, longitude=longitude
+            obs_id=obs_id, gdb_id="", latitude=latitude, longitude=longitude, remarks=""
         )
 
     planars = get_group_data(
         group_name=gdb_id,
         grouped=group_tables.grouped_planar,
-        columns=(Columns.DIP, Columns.DIP_DIRECTION),
+        columns=(Columns.DIP, Columns.DIP_DIRECTION, Columns.STYPE_TEXT),
     )
     linears = get_group_data(
         group_name=gdb_id,
         grouped=group_tables.grouped_linear,
-        columns=(Columns.DIRECTION, Columns.PLUNGE),
+        columns=(Columns.DIRECTION, Columns.PLUNGE, Columns.STYPE_TEXT),
     )
 
     images = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_images,
-        columns=(Columns.PICTURE_ID,),
+        columns=(Columns.PICTURE_ID, Columns.REMARKS),
     )
 
     observation = Observation(
@@ -111,6 +113,7 @@ def create_observation(
         images=images,
         latitude=latitude,
         longitude=longitude,
+        remarks=remarks,
     )
 
     return observation

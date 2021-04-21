@@ -5,7 +5,6 @@ Documentation of schema links.
 from enum import Enum, unique
 import pandas as pd
 from dataclasses import dataclass
-import logging
 from pandas.core.groupby.generic import DataFrameGroupBy
 
 
@@ -26,6 +25,8 @@ class Columns:
     PROJECT = "PROJECT"
     LATITUDE = "LAT"
     LONGITUDE = "LON"
+    REMARKS = "REMARKS"
+    STYPE_TEXT = "STYPE_TEXT"
 
 
 @unique
