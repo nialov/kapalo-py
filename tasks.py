@@ -119,6 +119,12 @@ def kapalo_update(c):
     kapalo_sql_path = Path("tests/sample_data/kapalo_sql/kapalo.sqlite")
     kapalo_sql_backup_path = Path("tests/sample_data/kapalo.sqlite.backup")
 
+    # Make dirs
+    kapalo_sql_dir = Path("tests/sample_data/kapalo_sql")
+    kapalo_imgs_dir = Path("tests/sample_data/kapalo_imgs")
+    for kapalo_dir in (kapalo_sql_dir, kapalo_imgs_dir):
+        kapalo_dir.mkdir(exist_ok=True)
+
     # Remove old backup
     kapalo_sql_backup_path.unlink(missing_ok=True)
 
