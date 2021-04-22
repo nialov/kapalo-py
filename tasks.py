@@ -122,6 +122,7 @@ def kapalo_update(c):
     # Make dirs
     kapalo_sql_dir = Path("tests/sample_data/kapalo_sql")
     kapalo_imgs_dir = Path("tests/sample_data/kapalo_imgs")
+    kapalo_imgs_orig_dir = Path("tests/sample_data/kapalo_imgs_orig")
     for kapalo_dir in (kapalo_sql_dir, kapalo_imgs_dir):
         kapalo_dir.mkdir(exist_ok=True)
 
@@ -136,4 +137,9 @@ def kapalo_update(c):
     c.run("rclone sync nialovdrive:kapalo_sql tests/sample_data/kapalo_sql")
 
     # Download images
-    c.run("rclone sync nialovdrive:kapalo_imgs tests/sample_data/kapalo_imgs")
+    c.run("rclone sync nialovdrive:kapalo_imgs tests/sample_data/kapalo_imgs_orig")
+
+    # Convert images to smaller
+    for image in kapalo_imgs_orig_dir.glob("*.jpg"):
+        new_path = kapalo_imgs_dir / image.name
+        c.run(f"convert '{image}' -resize 1000x1000 '{new_path}'")

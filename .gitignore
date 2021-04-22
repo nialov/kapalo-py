@@ -14,5 +14,6 @@ live-mapping
 piirros.png
 tests/sample_data/kapalo_sql
 tests/sample_data/kapalo_imgs
+tests/sample_data/kapalo_imgs_orig
 *.sqlite
 *.jpg
