@@ -3,6 +3,7 @@ Making spatial maps.
 """
 
 import logging
+from shutil import copytree, rmtree, copy
 import folium
 from itertools import compress
 import pandas as pd
@@ -67,12 +68,14 @@ def gather_observation_data(kapalo_tables: KapaloTables) -> List[Observation]:
     grouped_planar = kapalo_tables.planar_structures.groupby(Columns.TM_GID)
     grouped_linear = kapalo_tables.linear_structures.groupby(Columns.TM_GID)
     grouped_images = kapalo_tables.images.groupby(Columns.OBS_ID)
+    grouped_rock_obs = kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID)
 
     group_tables = GroupTables(
         grouped_tectonic=grouped_tectonic,
         grouped_planar=grouped_planar,
         grouped_images=grouped_images,
         grouped_linear=grouped_linear,
+        grouped_rock_obs=grouped_rock_obs,
     )
 
     observations = []
@@ -134,7 +137,7 @@ def dataframe_to_markdown(dataframe: pd.DataFrame) -> str:
     markdown_str = dataframe.to_markdown(index=False)
     if not isinstance(markdown_str, str):
         return "\n"
-    markdown_str += "\n"
+    markdown_str += "\n\n"
     return markdown_str
 
 
@@ -200,7 +203,11 @@ def observation_html(observation: Observation, imgs_path: Path):
     markdown_text = f"### {observation.obs_id}\n"
 
     # Tectonic measurements
-    for dataframe in (observation.planars, observation.linears):
+    for dataframe in (
+        observation.planars,
+        observation.linears,
+        observation.rock_observations,
+    ):
         markdown_text += "\n"
         markdown_text += dataframe_to_markdown(dataframe=dataframe)
 
@@ -213,7 +220,36 @@ def observation_html(observation: Observation, imgs_path: Path):
     html = markdown.markdown(markdown_text, extensions=["tables"])
 
     html = html.replace("src=", "height=150 src=")
+
     return html
+
+
+def add_local_stylesheet(html: str, local_stylesheet: Path = Path("data/styles.css")):
+    """
+    Add local stylesheet reference to html.
+    """
+    assert "style" in html
+    if not local_stylesheet.exists():
+        raise FileNotFoundError(f"Expected {local_stylesheet} to exist.")
+
+    # compiled_re = re.compile(r"\s*<style>html")
+
+    split_html = html.split("\n")
+
+    matched_line_idxs = [
+        idx for idx, line in enumerate(split_html) if "stylesheet" in line
+    ]
+
+    if not len(matched_line_idxs) > 0:
+        raise ValueError("Expected to find style line match in html string.")
+
+    matched_line_idx = max(matched_line_idxs) + 1
+
+    reference = f"""    <link rel="stylesheet" href="{local_stylesheet.name}"/>"""
+
+    split_html.insert(matched_line_idx, reference)
+
+    return "\n".join(split_html)
 
 
 def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Path):
@@ -255,3 +291,51 @@ def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Pat
             tooltip=str(observation.obs_id),
         ).add_to(map)
     return map
+
+
+def webmap_compilation(
+    kapalo_sqlite_path: Path,
+    kapalo_imgs_path: Path,
+    map_save_path: Path,
+    map_imgs_path: Path,
+):
+    """
+    Compile the web map.
+    """
+    # Read kapalo.sqlite
+    kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
+
+    # Path to kapalo images
+    imgs_path = kapalo_imgs_path
+
+    # Create the folium map
+    project_map = create_project_map(
+        kapalo_tables,
+        project="Kurikka GTK",
+        imgs_path=imgs_path,
+    )
+
+    # Save map to live-mapping repository
+    project_map.save(str(map_save_path))
+
+    # Replace image paths to local
+    replaced_img_paths_html = map_save_path.read_text().replace(
+        "data/kapalo_imgs", "kapalo_imgs"
+    )
+
+    styled_html = add_local_stylesheet(html=replaced_img_paths_html)
+
+    map_save_path.write_text(styled_html)
+
+    # Remove old
+    rmtree(map_imgs_path)
+
+    # Copy over images
+    copytree(kapalo_imgs_path, map_imgs_path)
+
+    # Copy css
+    styles_css_dest = Path("live-mapping/styles.css")
+    styles_css_orig = Path("data/styles.css")
+    if styles_css_dest.exists():
+        styles_css_dest.unlink()
+    copy(styles_css_orig, styles_css_dest)

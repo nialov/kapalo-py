@@ -11,6 +11,8 @@ from invoke import UnexpectedExit
 NOX_PARALLEL_SESSIONS = ("tests_pip",)
 
 PACKAGE_NAME = "kapalo_py"
+kapalo_imgs_dir = Path("data/kapalo_imgs")
+kapalo_imgs_orig_dir = Path("data/kapalo_imgs_orig")
 
 
 @task
@@ -111,20 +113,29 @@ def make(_):
 
 
 @task
+def image_convert(c):
+    """
+    Convert kapalo images to smaller size.
+    """
+    # Convert images to smaller
+    for image in kapalo_imgs_orig_dir.glob("*.jpg"):
+        new_path = kapalo_imgs_dir / image.name
+        c.run(f"convert '{image}' -resize 1000x1000 '{new_path}'")
+
+
+@task(post=[image_convert])
 def kapalo_update(c):
     """
     Download and update kapalo test data.
     """
     # kapalo.sqlite and backup paths
-    kapalo_sql_path = Path("tests/sample_data/kapalo_sql/kapalo.sqlite")
-    kapalo_sql_backup_path = Path("tests/sample_data/kapalo.sqlite.backup")
+    kapalo_sql_path = Path("data/kapalo_sql/kapalo.sqlite")
+    kapalo_sql_backup_path = Path("data/kapalo.sqlite.backup")
 
     # Make dirs
-    kapalo_sql_dir = Path("tests/sample_data/kapalo_sql")
-    kapalo_imgs_dir = Path("tests/sample_data/kapalo_imgs")
-    kapalo_imgs_orig_dir = Path("tests/sample_data/kapalo_imgs_orig")
-    for kapalo_dir in (kapalo_sql_dir, kapalo_imgs_dir):
-        kapalo_dir.mkdir(exist_ok=True)
+    kapalo_sql_dir = Path("data/kapalo_sql")
+    for kapalo_dir in (kapalo_sql_dir, kapalo_imgs_dir, kapalo_imgs_orig_dir):
+        kapalo_dir.mkdir(exist_ok=True, parents=True)
 
     # Remove old backup
     kapalo_sql_backup_path.unlink(missing_ok=True)
@@ -134,12 +145,7 @@ def kapalo_update(c):
         copy(kapalo_sql_path, kapalo_sql_backup_path)
 
     # Download new kapalo.sqlite
-    c.run("rclone sync nialovdrive:kapalo_sql tests/sample_data/kapalo_sql")
+    c.run("rclone sync nialovdrive:kapalo_sql data/kapalo_sql")
 
     # Download images
-    c.run("rclone sync nialovdrive:kapalo_imgs tests/sample_data/kapalo_imgs_orig")
-
-    # Convert images to smaller
-    for image in kapalo_imgs_orig_dir.glob("*.jpg"):
-        new_path = kapalo_imgs_dir / image.name
-        c.run(f"convert '{image}' -resize 1000x1000 '{new_path}'")
+    c.run("rclone sync nialovdrive:kapalo_imgs data/kapalo_imgs_orig")

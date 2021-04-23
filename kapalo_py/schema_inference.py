@@ -27,6 +27,8 @@ class Columns:
     LONGITUDE = "LON"
     REMARKS = "REMARKS"
     STYPE_TEXT = "STYPE_TEXT"
+    FOL_TYPE_TEXT = "FOL_TYPE_TEXT"
+    FIELD_NAME = "FIELD_NAME"
 
 
 @unique
@@ -96,6 +98,7 @@ class GroupTables:
     grouped_planar: DataFrameGroupBy
     grouped_linear: DataFrameGroupBy
     grouped_images: DataFrameGroupBy
+    grouped_rock_obs: DataFrameGroupBy
 
 
 connections = [

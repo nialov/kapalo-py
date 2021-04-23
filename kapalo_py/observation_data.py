@@ -26,6 +26,7 @@ class Observation:
     planars: pd.DataFrame = pd.DataFrame()
     linears: pd.DataFrame = pd.DataFrame()
     images: pd.DataFrame = pd.DataFrame()
+    rock_observations: pd.DataFrame = pd.DataFrame()
 
 
 def get_group_data(group_name: str, grouped, columns: Sequence[str]) -> pd.DataFrame:
@@ -91,7 +92,12 @@ def create_observation(
     planars = get_group_data(
         group_name=gdb_id,
         grouped=group_tables.grouped_planar,
-        columns=(Columns.DIP, Columns.DIP_DIRECTION, Columns.STYPE_TEXT),
+        columns=(
+            Columns.DIP,
+            Columns.DIP_DIRECTION,
+            Columns.STYPE_TEXT,
+            Columns.FOL_TYPE_TEXT,
+        ),
     )
     linears = get_group_data(
         group_name=gdb_id,
@@ -105,6 +111,12 @@ def create_observation(
         columns=(Columns.PICTURE_ID, Columns.REMARKS),
     )
 
+    rock_observations = get_group_data(
+        group_name=obs_id,
+        grouped=group_tables.grouped_rock_obs,
+        columns=(Columns.REMARKS, Columns.FIELD_NAME),
+    )
+
     observation = Observation(
         gdb_id=gdb_id,
         obs_id=obs_id,
@@ -114,6 +126,7 @@ def create_observation(
         latitude=latitude,
         longitude=longitude,
         remarks=remarks,
+        rock_observations=rock_observations,
     )
 
     return observation
