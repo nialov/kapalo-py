@@ -203,16 +203,21 @@ def observation_html(observation: Observation, imgs_path: Path):
     markdown_text = f"### {observation.obs_id}\n"
 
     # Tectonic measurements
-    for dataframe in (
-        observation.planars,
-        observation.linears,
-        observation.rock_observations,
+    for dataframe, dataframe_label in zip(
+        (
+            observation.planars,
+            observation.linears,
+            observation.rock_observations,
+        ),
+        ("Planar Structures", "Linear Structures", "Rock Observations"),
     ):
-        markdown_text += "\n"
+        markdown_text += f"\n#### {dataframe_label if not dataframe.empty else ''}\n\n"
         markdown_text += dataframe_to_markdown(dataframe=dataframe)
 
+    markdown_text += "\n#### Observation remarks\n\n"
     markdown_text += observation.remarks
 
+    markdown_text += "\n#### Images\n\n"
     markdown_text += observation_image_markdown(
         observation=observation, imgs_path=imgs_path
     )
@@ -334,8 +339,8 @@ def webmap_compilation(
     copytree(kapalo_imgs_path, map_imgs_path)
 
     # Copy css
-    styles_css_dest = Path("live-mapping/styles.css")
     styles_css_orig = Path("data/styles.css")
+    styles_css_dest = Path("live-mapping/styles.css")
     if styles_css_dest.exists():
         styles_css_dest.unlink()
     copy(styles_css_orig, styles_css_dest)
