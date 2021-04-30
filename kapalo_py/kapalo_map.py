@@ -3,6 +3,7 @@ Making spatial maps.
 """
 
 import logging
+import geopandas as gpd
 from shutil import copytree, rmtree, copy
 import folium
 from itertools import compress
@@ -13,6 +14,15 @@ from kapalo_py.schema_inference import Columns, Table, KapaloTables, GroupTables
 from kapalo_py.observation_data import Observation, create_observation
 import sqlite3
 import markdown
+
+
+def path_copy(src: Path, dest: Path):
+    """
+    Copy src to dest.
+    """
+    if dest.exists():
+        dest.unlink()
+    copy(src, dest)
 
 
 def dip_colors(dip: float):
@@ -298,6 +308,27 @@ def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Pat
     return map
 
 
+def lineament_style(_):
+    """
+    Style lineament polylines.
+    """
+    return {
+        "color": "black",
+        "weight": "1",
+    }
+
+
+def bedrock_style(_):
+    """
+    Style bedrock polygons.
+    """
+    return {
+        "strokeColor": "blue",
+        "fillOpacity": 0.0,
+        "weight": 0.5,
+    }
+
+
 def webmap_compilation(
     kapalo_sqlite_path: Path,
     kapalo_imgs_path: Path,
@@ -320,6 +351,23 @@ def webmap_compilation(
         imgs_path=imgs_path,
     )
 
+    # Add lineaments
+    folium.GeoJson(
+        data="data/kurikka.geojson",
+        name="Kurikka Lineaments",
+        style_function=lineament_style,
+    ).add_to(project_map)
+
+    # rock_names = gpd.read_file("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
+
+    # Add bedrock
+    folium.GeoJson(
+        data="data/kurikka_bedrock.geojson",
+        name="Kurikka Bedrock",
+        popup=folium.GeoJsonPopup(fields=["ROCK_NAME_"]),
+        style_function=bedrock_style,
+    ).add_to(project_map)
+
     # Save map to live-mapping repository
     project_map.save(str(map_save_path))
 
@@ -339,8 +387,4 @@ def webmap_compilation(
     copytree(kapalo_imgs_path, map_imgs_path)
 
     # Copy css
-    styles_css_orig = Path("data/styles.css")
-    styles_css_dest = Path("live-mapping/styles.css")
-    if styles_css_dest.exists():
-        styles_css_dest.unlink()
-    copy(styles_css_orig, styles_css_dest)
+    path_copy(Path("data/styles.css"), Path("live-mapping/styles.css"))
