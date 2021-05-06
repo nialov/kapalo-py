@@ -3,7 +3,6 @@ Making spatial maps.
 """
 
 import logging
-import geopandas as gpd
 from shutil import copytree, rmtree, copy
 import folium
 from itertools import compress
@@ -14,6 +13,9 @@ from kapalo_py.schema_inference import Columns, Table, KapaloTables, GroupTables
 from kapalo_py.observation_data import Observation, create_observation
 import sqlite3
 import markdown
+
+kurikka_lineaments = Path("data/kurikka.geojson")
+kurikka_bedrock = Path("data/kurikka_bedrock,geojson")
 
 
 def path_copy(src: Path, dest: Path):
@@ -351,22 +353,24 @@ def webmap_compilation(
         imgs_path=imgs_path,
     )
 
-    # Add lineaments
-    folium.GeoJson(
-        data="data/kurikka.geojson",
-        name="Kurikka Lineaments",
-        style_function=lineament_style,
-    ).add_to(project_map)
+    if kurikka_lineaments.exists():
+        # Add lineaments
+        folium.GeoJson(
+            data="data/kurikka.geojson",
+            name="Kurikka Lineaments",
+            style_function=lineament_style,
+        ).add_to(project_map)
 
     # rock_names = gpd.read_file("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
 
-    # Add bedrock
-    folium.GeoJson(
-        data="data/kurikka_bedrock.geojson",
-        name="Kurikka Bedrock",
-        popup=folium.GeoJsonPopup(fields=["ROCK_NAME_"]),
-        style_function=bedrock_style,
-    ).add_to(project_map)
+    if kurikka_bedrock.exists():
+        # Add bedrock
+        folium.GeoJson(
+            data="data/kurikka_bedrock.geojson",
+            name="Kurikka Bedrock",
+            popup=folium.GeoJsonPopup(fields=["ROCK_NAME_"]),
+            style_function=bedrock_style,
+        ).add_to(project_map)
 
     # Save map to live-mapping repository
     project_map.save(str(map_save_path))
