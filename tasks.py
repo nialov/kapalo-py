@@ -149,3 +149,34 @@ def kapalo_update(c):
 
     # Download images
     c.run("rclone sync nialovdrive:kapalo_imgs data/kapalo_imgs_orig")
+
+
+@task
+def exports_to_shp(c):
+    """
+    Convert exports to shapefiles.
+    """
+    exports = Path("exports")
+    exports_shp = exports / "as_shp"
+    exports_shp.mkdir(parents=True, exist_ok=True)
+
+    for path in exports.iterdir():
+        if "gpkg" in path.suffix:
+            new_name = path.with_suffix(".shp").name
+            new_path = exports_shp / new_name
+            new_path.unlink(missing_ok=True)
+            c.run(
+                " ".join(
+                    [
+                        "geotrans",
+                        str(path),
+                        "--to_type",
+                        "shp",
+                        "--output",
+                        str(new_path),
+                    ]
+                )
+            )
+
+    # Sync shapefiles to onedrive
+    c.run("rclone sync exports nialovdrive:kapalo_exports ")

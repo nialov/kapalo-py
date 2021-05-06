@@ -7,7 +7,7 @@ from shutil import copytree, rmtree, copy
 import folium
 from itertools import compress
 import pandas as pd
-from typing import List, Tuple
+from typing import List, Tuple, Sequence
 from pathlib import Path
 from kapalo_py.schema_inference import Columns, Table, KapaloTables, GroupTables
 from kapalo_py.observation_data import Observation, create_observation
@@ -127,19 +127,6 @@ def location_centroid(observations: pd.DataFrame) -> Tuple[float, float]:
     return mean_latitude, mean_longitude
 
 
-# def dataframe_to_html(dataframe: pd.DataFrame) -> str:
-#     """
-#     Convert dataframe to html.
-#     """
-#     if dataframe.empty:
-#         return "\n"
-#     html = dataframe.to_html()
-#     if not isinstance(html, str):
-#         return "\n"
-#     html += "\n"
-#     return html
-
-
 def dataframe_to_markdown(dataframe: pd.DataFrame) -> str:
     """
     Convert dataframe to html.
@@ -200,9 +187,13 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
         # Example link inside markdown image:
         # <img src="http://www.google.com.au/images/nav_logo7.png">
         if idx < 2:
+
+            # Add image and link
             markdown_text += f"[![{image_caption}]({match_path})]({match_path})"
             markdown_text += image_caption
         else:
+
+            # Add only link text
             markdown_text += f"[{image_caption, image_id}]({match_path})"
 
     return markdown_text
@@ -269,13 +260,26 @@ def add_local_stylesheet(html: str, local_stylesheet: Path = Path("data/styles.c
     return "\n".join(split_html)
 
 
+def gather_project_observations(kapalo_tables: KapaloTables, projects: Sequence[str]):
+    """
+    Gather Observations related to projects.
+    """
+    filtered_kapalo_tables = kapalo_tables.filter_observations_to_projects(
+        projects=projects
+    )
+
+    observations = gather_observation_data(kapalo_tables=filtered_kapalo_tables)
+
+    return observations
+
+
 def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Path):
     """
     Create folium map for project observations.
     """
-    kapalo_tables.filter_observations_to_project(project=project)
-
-    observations = gather_observation_data(kapalo_tables=kapalo_tables)
+    observations = gather_project_observations(
+        kapalo_tables=kapalo_tables, projects=(project,)
+    )
 
     map = folium.Map(
         location=location_centroid(observations=kapalo_tables.observations),

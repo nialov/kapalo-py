@@ -3,9 +3,11 @@ Documentation of schema links.
 """
 
 from enum import Enum, unique
+import numpy as np
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pandas.core.groupby.generic import DataFrameGroupBy
+from typing import Sequence
 
 
 class Columns:
@@ -29,6 +31,7 @@ class Columns:
     STYPE_TEXT = "STYPE_TEXT"
     FOL_TYPE_TEXT = "FOL_TYPE_TEXT"
     FIELD_NAME = "FIELD_NAME"
+    GEOMETRY = "geometry"
 
 
 @unique
@@ -78,13 +81,26 @@ class KapaloTables:
             ]
         )
 
-    def filter_observations_to_project(self, project: str):
+    def copy(self):
         """
-        Filter observations table to only a single project.
+        Make copy of self.
         """
-        self.observations = self.observations.loc[
-            self.observations[Columns.PROJECT] == project
+        self_as_dict = {key: item.copy() for key, item in asdict(self).items()}
+
+        return KapaloTables(**self_as_dict)
+
+    def filter_observations_to_projects(self, projects: Sequence[str]):
+        """
+        Filter observations table to project(s).
+        """
+
+        self_copy = self.copy()
+
+        self_copy.observations = self.observations.loc[
+            np.isin(self.observations[Columns.PROJECT], projects)
         ]
+
+        return self_copy
 
 
 @dataclass
@@ -101,10 +117,10 @@ class GroupTables:
     grouped_rock_obs: DataFrameGroupBy
 
 
-connections = [
-    {Table.OBSERVATIONS: Columns.OBS_ID, Table.TECTONIC_MEASUREMENTS: Columns.OBS_ID},
-    {Table.TECTONIC_MEASUREMENTS: Columns.GDB_ID, Table.PLANAR: Columns.TM_GID},
-    {Table.TECTONIC_MEASUREMENTS: Columns.GDB_ID, Table.LINEAR: Columns.TM_GID},
-    {Table.IMAGES: Columns.OBS_ID, Table.OBSERVATIONS: Columns.OBS_ID},
-    {Table.ROCK_OBS: Columns.OBS_ID, Table.OBSERVATIONS: Columns.OBS_ID},
-]
+# connections = [
+#     {Table.OBSERVATIONS: Columns.OBS_ID, Table.TECTONIC_MEASUREMENTS: Columns.OBS_ID},
+#     {Table.TECTONIC_MEASUREMENTS: Columns.GDB_ID, Table.PLANAR: Columns.TM_GID},
+#     {Table.TECTONIC_MEASUREMENTS: Columns.GDB_ID, Table.LINEAR: Columns.TM_GID},
+#     {Table.IMAGES: Columns.OBS_ID, Table.OBSERVATIONS: Columns.OBS_ID},
+#     {Table.ROCK_OBS: Columns.OBS_ID, Table.OBSERVATIONS: Columns.OBS_ID},
+# ]

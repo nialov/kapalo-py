@@ -18,3 +18,4 @@ tests/sample_data/kapalo_imgs_orig
 *.sqlite
 *.jpg
 data
+exports
