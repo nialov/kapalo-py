@@ -120,8 +120,8 @@ def location_centroid(observations: pd.DataFrame) -> Tuple[float, float]:
     """
     Get mean location for project.
     """
-    mean_latitude = observations[Columns.LATITUDE].mean()
-    mean_longitude = observations[Columns.LONGITUDE].mean()
+    mean_latitude = observations[Columns.LATITUDE].median()
+    mean_longitude = observations[Columns.LONGITUDE].median()
     assert isinstance(mean_latitude, float)
     assert isinstance(mean_longitude, float)
     return mean_latitude, mean_longitude
@@ -260,7 +260,9 @@ def add_local_stylesheet(html: str, local_stylesheet: Path = Path("data/styles.c
     return "\n".join(split_html)
 
 
-def gather_project_observations(kapalo_tables: KapaloTables, projects: Sequence[str]):
+def gather_project_observations(
+    kapalo_tables: KapaloTables, projects: Sequence[str]
+) -> Tuple[List[Observation], KapaloTables]:
     """
     Gather Observations related to projects.
     """
@@ -270,14 +272,52 @@ def gather_project_observations(kapalo_tables: KapaloTables, projects: Sequence[
 
     observations = gather_observation_data(kapalo_tables=filtered_kapalo_tables)
 
-    return observations
+    return observations, filtered_kapalo_tables
+
+
+def observation_marker(observation: Observation, imgs_path: Path) -> folium.Marker:
+    """
+    Make observation marker.
+    """
+    if not observation.linears.empty:
+
+        # If lineation data exists plot it
+        lineation_dir = observation.linears[Columns.DIRECTION].values[0]
+        if not isinstance(lineation_dir, (float, int)):
+            assert hasattr(lineation_dir, "item")
+
+            # Resolve Python object from numpy
+            lineation_dir = lineation_dir.item()  # type: ignore
+
+        # Save into dict
+        icon_properties = dict(
+            icon="glyphicon-arrow-up",
+            angle=lineation_dir,
+        )
+    else:
+
+        # Default icon
+        icon_properties = dict(icon="glyphicon-stop", color="lightgray")
+
+    # Create folium marker
+    marker = folium.Marker(
+        location=[observation.latitude, observation.longitude],
+        popup=folium.Popup(
+            observation_html(observation=observation, imgs_path=imgs_path),
+            parse_html=False,
+        ),
+        icon=folium.Icon(**icon_properties),
+        tooltip=str(observation.obs_id),
+    )
+
+    return marker
 
 
 def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Path):
     """
     Create folium map for project observations.
     """
-    observations = gather_project_observations(
+    observations, kapalo_tables = gather_project_observations(
         kapalo_tables=kapalo_tables, projects=(project,)
     )
 
@@ -286,31 +326,8 @@ def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Pat
         tiles="OpenStreetMap",
     )
     for observation in observations:
-        # dip = row["DIP"]
-        # dip_dir = row["DIRECTION_OF_DIP"]
-        # rotation = dip_dir - 90 if dip_dir > 90 else 270 + dip_dir
-        # rock_name = row["ROCK_NAME_TEXT"]
-        # measurement = f"{dip_dir:>3}/{dip:>2}".replace(" ", "0")
-        lineation_dir = (
-            observation.linears[Columns.DIRECTION].values[0]
-            if not observation.linears.empty
-            else 0.0
-        )
-        if not isinstance(lineation_dir, (float, int)):
-            assert hasattr(lineation_dir, "item")
-            lineation_dir = lineation_dir.item()  # type: ignore
-        folium.Marker(
-            location=[observation.latitude, observation.longitude],
-            popup=folium.Popup(
-                observation_html(observation=observation, imgs_path=imgs_path),
-                parse_html=False,
-            ),
-            icon=folium.Icon(
-                icon="glyphicon-arrow-up",
-                angle=lineation_dir,
-            ),
-            tooltip=str(observation.obs_id),
-        ).add_to(map)
+        marker = observation_marker(observation=observation, imgs_path=imgs_path)
+        marker.add_to(map)
     return map
 
 
