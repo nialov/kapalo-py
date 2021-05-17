@@ -182,20 +182,13 @@ def exports_to_shp(c):
                         str(new_path),
                         "--driver",
                         "Shapefile",
+                        "--src_crs",
+                        "EPSG:4326",
+                        "--dst_crs",
+                        "EPSG:3067",
                     ]
                 )
             )
-            # c.run(
-            #     " ".join(
-            #         [
-            #             "geotrans",
-            #             str(path),
-            #             "--to_type",
-            #             "shp",
-            #             "--output",
-            #             str(new_path),
-            #         ]
-            #     )
 
     # Sync shapefiles to onedrive
     c.run("rclone sync exports nialovdrive:kapalo_exports ")
