@@ -156,10 +156,15 @@ def exports_to_shp(c):
     """
     Convert exports to shapefiles.
     """
+    # Export as geopackages and csvs
+    c.run("python -m kapalo_py export-observations")
+
+    # Make directories
     exports = Path("exports")
     exports_shp = exports / "as_shp"
     exports_shp.mkdir(parents=True, exist_ok=True)
 
+    # Iterate over exported and find geopackages
     for path in exports.iterdir():
         if "gpkg" in path.suffix:
             new_name = path.with_suffix(".shp").name
@@ -168,15 +173,29 @@ def exports_to_shp(c):
             c.run(
                 " ".join(
                     [
-                        "geotrans",
+                        "fio",
+                        "dump",
                         str(path),
-                        "--to_type",
-                        "shp",
-                        "--output",
+                        "|",
+                        "fio",
+                        "load",
                         str(new_path),
+                        "--driver",
+                        "Shapefile",
                     ]
                 )
             )
+            # c.run(
+            #     " ".join(
+            #         [
+            #             "geotrans",
+            #             str(path),
+            #             "--to_type",
+            #             "shp",
+            #             "--output",
+            #             str(new_path),
+            #         ]
+            #     )
 
     # Sync shapefiles to onedrive
     c.run("rclone sync exports nialovdrive:kapalo_exports ")

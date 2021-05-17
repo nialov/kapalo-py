@@ -59,10 +59,14 @@ def export_projects_to_folder(
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
     # Gather observations
-    observations = kapalo_map.gather_project_observations(
+    observations, kapalo_tables = kapalo_map.gather_project_observations(
         kapalo_tables=kapalo_tables,
         projects=projects,
     )
+
+    if len(observations) == 0:
+        print("No Observations gathered/found.")
+        return
 
     # Iterate over chosen observation types
     for observation_type in ("planars", "linears"):
