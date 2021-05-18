@@ -3,10 +3,8 @@ Observation data management and parsing.
 """
 import logging
 from dataclasses import dataclass
-from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables
+from kapalo_py.schema_inference import Columns, GroupTables
 from typing import Optional, Sequence
-from pandas.core.groupby.generic import DataFrameGroupBy
-import numpy as np
 
 import pandas as pd
 

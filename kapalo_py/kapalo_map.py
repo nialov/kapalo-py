@@ -3,6 +3,7 @@ Making spatial maps.
 """
 
 import logging
+from itertools import chain
 from shutil import copytree, rmtree, copy
 import folium
 from itertools import compress
@@ -48,7 +49,37 @@ def sql_table_to_dataframe(table: str, connection: sqlite3.Connection):
     return dataframe
 
 
-def read_kapalo_tables(path: Path) -> KapaloTables:
+# def merge_kapalo_tables(tables: Sequence[KapaloTables]) -> KapaloTables:
+#     """
+#     Merge a Sequence of KapaloTables objects.
+#     """
+#     if not all([isinstance(val, KapaloTables) for val in tables]):
+#         raise TypeError("Expected only KapaloTables objects in merge_kapalo_tables.")
+#     first = tables[0]
+#     if len(tables) == 1:
+#         return first
+#     for table in tables[1:]:
+#         first = first + table
+#     return first
+
+
+def read_kapalo_tables(path: Path) -> List[KapaloTables]:
+    """
+    Read multiple kapalo.sqlite files into a single KapaloTables.
+    """
+    all_tables = []
+    for kapalo_sqlite_file in path.iterdir():
+        assert kapalo_sqlite_file.is_file()
+
+        # Read kapalo.sqlite
+        kapalo_table = read_kapalo_table(path=kapalo_sqlite_file)
+        assert isinstance(kapalo_table, KapaloTables)
+        all_tables.append(kapalo_table)
+
+    return all_tables
+
+
+def read_kapalo_table(path: Path) -> KapaloTables:
     """
     Read kapalo.sqlite for KapaloTables.
     """
@@ -313,19 +344,44 @@ def observation_marker(observation: Observation, imgs_path: Path) -> folium.Mark
     return marker
 
 
-def create_project_map(kapalo_tables: KapaloTables, project: str, imgs_path: Path):
+def gather_project_observations_multiple(
+    kapalo_tables: List[List[KapaloTables]],
+    project: str,
+) -> Tuple[List[Observation], List[List[KapaloTables]]]:
+    all_observations = []
+    all_project_tables = []
+    for kapalo_tables in kapalo_tables:
+        observations, kapalo_tables = gather_project_observations(
+            kapalo_tables=kapalo_tables, projects=(project,)
+        )
+        all_observations.append(observations)
+        all_project_tables.append(kapalo_tables)
+
+    return all_observations, all_project_tables
+
+
+def create_project_map(
+    kapalo_tables: List[KapaloTables], project: str, imgs_path: Path
+):
     """
     Create folium map for project observations.
     """
-    observations, kapalo_tables = gather_project_observations(
-        kapalo_tables=kapalo_tables, projects=(project,)
+    all_observations, all_project_tables = gather_project_observations_multiple(
+        kapalo_tables, project
     )
 
     map = folium.Map(
-        location=location_centroid(observations=kapalo_tables.observations),
+        location=location_centroid(
+            observations=pd.concat(
+                [
+                    all_project_table.observations
+                    for all_project_table in all_project_tables
+                ]
+            )
+        ),
         tiles="OpenStreetMap",
     )
-    for observation in observations:
+    for observation in chain(*all_observations):
         marker = observation_marker(observation=observation, imgs_path=imgs_path)
         marker.add_to(map)
     return map
@@ -361,7 +417,6 @@ def webmap_compilation(
     """
     Compile the web map.
     """
-    # Read kapalo.sqlite
     kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
 
     # Path to kapalo images

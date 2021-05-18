@@ -13,9 +13,10 @@ app = typer.Typer()
 @app.command()
 def compile_webmap(
     kapalo_sqlite_path: Path = typer.Option(
-        default=Path("data/kapalo_sql/kapalo.sqlite"),
+        default=Path("data/kapalo_sql/"),
         exists=True,
-        dir_okay=False,
+        dir_okay=True,
+        file_okay=False,
     ),
     kapalo_imgs_path: Path = typer.Option(
         default=Path("data/kapalo_imgs/"),
@@ -40,7 +41,7 @@ def compile_webmap(
 def export_observations(
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     kapalo_sqlite_path: Path = typer.Option(
-        default=Path("data/kapalo_sql/kapalo.sqlite"),
+        default=Path("data/kapalo_sql/"),
         exists=True,
         dir_okay=False,
     ),

@@ -5,7 +5,8 @@ Documentation of schema links.
 from enum import Enum, unique
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, asdict
+from itertools import chain
+from dataclasses import dataclass, asdict, fields
 from pandas.core.groupby.generic import DataFrameGroupBy
 from typing import Sequence
 
@@ -93,7 +94,6 @@ class KapaloTables:
         """
         Filter observations table to project(s).
         """
-
         self_copy = self.copy()
 
         self_copy.observations = self.observations.loc[
@@ -101,6 +101,52 @@ class KapaloTables:
         ]
 
         return self_copy
+
+    def __add__(self, other):
+        """
+        Implement merging multiple KapaloTables objects.
+        """
+        if not isinstance(other, KapaloTables):
+            raise TypeError("Expected other to be an instance of KapaloTables.")
+        # First check if all observation ids are unique.
+        all_obs_ids = np.array(
+            list(
+                chain(
+                    self.observations[Columns.OBS_ID].values,
+                    other.observations[Columns.OBS_ID].values,
+                )
+            )
+        )
+
+        # Get unique values and counts of occurrence
+        # count is 1 if unique
+        values, counts = np.unique(all_obs_ids, return_counts=True)
+
+        non_unique = values[counts != 1]
+        if len(non_unique) != 0:
+            return ValueError(
+                f"Expected all unique observation ids.\nNon-unique: {non_unique}"
+            )
+
+        new_attributes = dict()
+        # Can now "safely" merge
+        for field in fields(self):
+            attribute = field.name
+            assert hasattr(self, attribute)
+            assert hasattr(other, attribute)
+
+            new_df = pd.concat(
+                [getattr(self, attribute), getattr(other, attribute)], ignore_index=True
+            )
+            new_attributes[attribute] = new_df
+
+        return KapaloTables(**new_attributes)
+
+    def __radd__(self, other):
+        """
+        Right side add.
+        """
+        return self.__add__(other)
 
 
 @dataclass

@@ -53,11 +53,12 @@ def export_projects_to_folder(
     projects: Sequence[str],
 ):
     """
-    Compile the web map.
+    Export kapalo projects to folder.
     """
     # Read kapalo.sqlite
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
+    assert False
     # Gather observations
     observations, kapalo_tables = kapalo_map.gather_project_observations(
         kapalo_tables=kapalo_tables,
