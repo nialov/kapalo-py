@@ -8,7 +8,7 @@ from shutil import copytree, rmtree, copy
 import folium
 from itertools import compress
 import pandas as pd
-from typing import List, Tuple, Sequence
+from typing import List, Tuple, Sequence, Dict
 from pathlib import Path
 from kapalo_py.schema_inference import Columns, Table, KapaloTables, GroupTables
 from kapalo_py.observation_data import Observation, create_observation
@@ -65,7 +65,7 @@ def sql_table_to_dataframe(table: str, connection: sqlite3.Connection):
 
 def read_kapalo_tables(path: Path) -> List[KapaloTables]:
     """
-    Read multiple kapalo.sqlite files into a single KapaloTables.
+    Read multiple kapalo.sqlite files into a list of KapaloTables.
     """
     all_tables = []
     for kapalo_sqlite_file in path.iterdir():
@@ -81,7 +81,7 @@ def read_kapalo_tables(path: Path) -> List[KapaloTables]:
 
 def read_kapalo_table(path: Path) -> KapaloTables:
     """
-    Read kapalo.sqlite for KapaloTables.
+    Read kapalo.sqlite to create KapaloTables object.
     """
     db = sqlite3.connect(path)
     observations = sql_table_to_dataframe(Table.OBSERVATIONS.value, db)
@@ -103,7 +103,9 @@ def read_kapalo_table(path: Path) -> KapaloTables:
     )
 
 
-def gather_observation_data(kapalo_tables: KapaloTables) -> List[Observation]:
+def gather_observation_data(
+    kapalo_tables: KapaloTables, exceptions: Dict[str, str]
+) -> List[Observation]:
     """
     Get data for observations.
     """
@@ -135,12 +137,14 @@ def gather_observation_data(kapalo_tables: KapaloTables) -> List[Observation]:
         assert isinstance(longitude, float)
         assert isinstance(remarks, str)
 
+        # Create an Observation
         observation = create_observation(
             group_tables=group_tables,
             obs_id=obs_id,
             latitude=latitude,
             longitude=longitude,
             remarks=remarks,
+            exceptions=exceptions,
         )
 
         observations.append(observation)
@@ -292,7 +296,9 @@ def add_local_stylesheet(html: str, local_stylesheet: Path = Path("data/styles.c
 
 
 def gather_project_observations(
-    kapalo_tables: KapaloTables, projects: Sequence[str]
+    kapalo_tables: KapaloTables,
+    projects: Sequence[str],
+    exceptions: Dict[str, str],
 ) -> Tuple[List[Observation], KapaloTables]:
     """
     Gather Observations related to projects.
@@ -301,7 +307,9 @@ def gather_project_observations(
         projects=projects
     )
 
-    observations = gather_observation_data(kapalo_tables=filtered_kapalo_tables)
+    observations = gather_observation_data(
+        kapalo_tables=filtered_kapalo_tables, exceptions=exceptions
+    )
 
     return observations, filtered_kapalo_tables
 
@@ -347,12 +355,18 @@ def observation_marker(observation: Observation, imgs_path: Path) -> folium.Mark
 def gather_project_observations_multiple(
     kapalo_tables: List[List[KapaloTables]],
     project: str,
+    exceptions: Dict[str, str],
 ) -> Tuple[List[Observation], List[List[KapaloTables]]]:
+    """
+    Gather all project observations from multiple KapaloTables.
+    """
     all_observations = []
     all_project_tables = []
     for kapalo_tables in kapalo_tables:
         observations, kapalo_tables = gather_project_observations(
-            kapalo_tables=kapalo_tables, projects=(project,)
+            kapalo_tables=kapalo_tables,
+            projects=(project,),
+            exceptions=exceptions,
         )
         all_observations.append(observations)
         all_project_tables.append(kapalo_tables)
@@ -361,15 +375,19 @@ def gather_project_observations_multiple(
 
 
 def create_project_map(
-    kapalo_tables: List[KapaloTables], project: str, imgs_path: Path
+    kapalo_tables: List[KapaloTables],
+    project: str,
+    imgs_path: Path,
+    exceptions: Dict[str, str],
 ):
     """
     Create folium map for project observations.
     """
     all_observations, all_project_tables = gather_project_observations_multiple(
-        kapalo_tables, project
+        kapalo_tables, project, exceptions=exceptions
     )
 
+    # Initialize map and center it on the observations
     map = folium.Map(
         location=location_centroid(
             observations=pd.concat(
@@ -381,7 +399,14 @@ def create_project_map(
         ),
         tiles="OpenStreetMap",
     )
+    observation_id_set = set()
     for observation in chain(*all_observations):
+        obs_id = observation.obs_id
+        if obs_id in observation_id_set:
+            logging.error(f"Duplicate obs_id for {obs_id}. Skipping.")
+            continue
+        observation_id_set.add(obs_id)
+
         marker = observation_marker(observation=observation, imgs_path=imgs_path)
         marker.add_to(map)
     return map
@@ -413,6 +438,7 @@ def webmap_compilation(
     kapalo_imgs_path: Path,
     map_save_path: Path,
     map_imgs_path: Path,
+    exceptions: Dict[str, str],
 ):
     """
     Compile the web map.
@@ -427,6 +453,7 @@ def webmap_compilation(
         kapalo_tables,
         project="Kurikka GTK",
         imgs_path=imgs_path,
+        exceptions=exceptions,
     )
 
     if kurikka_lineaments.exists():

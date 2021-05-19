@@ -4,7 +4,7 @@ Observation data management and parsing.
 import logging
 from dataclasses import dataclass
 from kapalo_py.schema_inference import Columns, GroupTables
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Dict
 
 import pandas as pd
 
@@ -27,15 +27,35 @@ class Observation:
     rock_observations: pd.DataFrame = pd.DataFrame()
 
 
-def get_group_data(group_name: str, grouped, columns: Sequence[str]) -> pd.DataFrame:
+def get_group_data(
+    group_name: str,
+    grouped,
+    columns: Sequence[str],
+    exceptions: Dict[str, str] = dict(),
+) -> pd.DataFrame:
     """
     Get group data if group_name is in grouped.
     """
     try:
         group: pd.DataFrame = grouped.get_group(group_name)
+        if group_name in exceptions:
+            logging.error(
+                f"{group_name} marked in exceptions but found original counterpart."
+            )
     except KeyError:
-        logging.info(f"No data for {group_name}.")
-        return pd.DataFrame()
+        if group_name in exceptions:
+            try:
+                group: pd.DataFrame = grouped.get_group(exceptions[group_name])
+            except KeyError:
+                logging.error(
+                    f"Exception {group_name} marked but "
+                    f"counterpart {exceptions[group_name]} not found."
+                )
+                raise
+        else:
+
+            logging.info(f"No data for {group_name}.")
+            return pd.DataFrame()
 
     for col in columns:
         if col not in group.columns:
@@ -74,12 +94,16 @@ def create_observation(
     latitude: float,
     longitude: float,
     remarks: str,
+    exceptions: Dict[str, str],
 ) -> Observation:
     """
     Create Observation from data.
     """
     tectonics = get_group_data(
-        group_name=obs_id, grouped=group_tables.grouped_tectonic, columns=[]
+        group_name=obs_id,
+        grouped=group_tables.grouped_tectonic,
+        columns=[],
+        exceptions=exceptions,
     )
     gdb_id = resolve_tm_gid(tectonics=tectonics)
     if gdb_id is None:
