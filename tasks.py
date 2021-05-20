@@ -192,3 +192,14 @@ def exports_to_shp(c):
 
     # Sync shapefiles to onedrive
     c.run("rclone sync exports nialovdrive:kapalo_exports ")
+
+
+@task
+def push_map(c):
+    """
+    Upload compiled map to GitHub.
+    """
+    with c.cd("live-mapping"):
+        c.run("git add .")
+        c.run("git commit -m 'update webmap'")
+        c.run("git push")

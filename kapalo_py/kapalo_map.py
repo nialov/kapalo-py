@@ -315,7 +315,9 @@ def gather_project_observations(
     return observations, filtered_kapalo_tables
 
 
-def observation_marker(observation: Observation, imgs_path: Path) -> folium.Marker:
+def observation_marker(
+    observation: Observation, imgs_path: Path, rechecks: List[str]
+) -> folium.Marker:
     """
     Make observation marker.
     """
@@ -333,11 +335,15 @@ def observation_marker(observation: Observation, imgs_path: Path) -> folium.Mark
         icon_properties = dict(
             icon="glyphicon-arrow-up",
             angle=lineation_dir,
+            color=("blue" if observation.obs_id not in rechecks else "red"),
         )
     else:
 
         # Default icon
-        icon_properties = dict(icon="glyphicon-stop", color="lightgray")
+        icon_properties = dict(
+            icon="glyphicon-stop",
+            color=("lightgray" if observation.obs_id not in rechecks else "red"),
+        )
 
     # Create folium marker
     marker = folium.Marker(
@@ -380,6 +386,7 @@ def create_project_map(
     project: str,
     imgs_path: Path,
     exceptions: Dict[str, str],
+    rechecks: List[str],
 ):
     """
     Create folium map for project observations.
@@ -408,7 +415,9 @@ def create_project_map(
             continue
         observation_id_set.add(obs_id)
 
-        marker = observation_marker(observation=observation, imgs_path=imgs_path)
+        marker = observation_marker(
+            observation=observation, imgs_path=imgs_path, rechecks=rechecks
+        )
         marker.add_to(map)
     return map
 
@@ -440,6 +449,7 @@ def webmap_compilation(
     map_save_path: Path,
     map_imgs_path: Path,
     exceptions: Dict[str, str],
+    rechecks: List[str],
 ):
     """
     Compile the web map.
@@ -455,6 +465,7 @@ def webmap_compilation(
         project="Kurikka GTK",
         imgs_path=imgs_path,
         exceptions=exceptions,
+        rechecks=rechecks,
     )
 
     if kurikka_lineaments.exists():
@@ -477,7 +488,9 @@ def webmap_compilation(
         ).add_to(project_map)
 
     # Add user location control
-    locate_control.LocateControl().add_to(project_map)
+    locate_control.LocateControl(
+        locateOptions={"enableHighAccuracy": True, "watch": True, "timeout": 100000}
+    ).add_to(project_map)
 
     # Save map to live-mapping repository
     project_map.save(str(map_save_path))
@@ -491,7 +504,6 @@ def webmap_compilation(
 
     map_save_path.write_text(styled_html)
 
-
     # Remove old
     rmtree(map_imgs_path)
 
@@ -500,5 +512,3 @@ def webmap_compilation(
 
     # Copy css
     path_copy(Path("data/styles.css"), Path("live-mapping/styles.css"))
-
-

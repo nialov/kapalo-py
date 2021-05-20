@@ -5,29 +5,35 @@ import typer
 import kapalo_py.kapalo_map as kapalo_map
 import kapalo_py.export as export
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import configparser
 
 app = typer.Typer()
 
 EXCEPTIONS = "exceptions"
+RECHECK = "recheck"
 
 
-def read_config(config_path: Path) -> Dict[str, str]:
+def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
     """
     Read mapconfig.ini if it exists.
     """
     if not config_path.exists():
-        return dict()
+        return dict(), []
 
-    config_parser = configparser.ConfigParser()
-
+    config_parser = configparser.ConfigParser(allow_no_value=True)
     # Overwrite reading keys as lowercase
     config_parser.optionxform = lambda option: option
     config_parser.read(config_path)
-    assert EXCEPTIONS in config_parser
+    assert RECHECK in config_parser
+    rechecks = list(config_parser[RECHECK].keys()) if RECHECK in config_parser else []
+    exceptions = (
+        dict(config_parser[EXCEPTIONS].items())
+        if EXCEPTIONS in config_parser
+        else dict()
+    )
 
-    return dict(config_parser[EXCEPTIONS].items())
+    return exceptions, rechecks
 
 
 @app.command()
@@ -50,13 +56,14 @@ def compile_webmap(
     """
     Compile live-mapping website.
     """
-    exceptions = read_config(config_path)
+    exceptions, rechecks = read_config(config_path)
     kapalo_map.webmap_compilation(
         kapalo_sqlite_path=kapalo_sqlite_path,
         kapalo_imgs_path=kapalo_imgs_path,
         map_save_path=map_save_path,
         map_imgs_path=map_imgs_path,
         exceptions=exceptions,
+        rechecks=rechecks,
     )
 
 
