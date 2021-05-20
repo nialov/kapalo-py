@@ -14,6 +14,7 @@ from kapalo_py.schema_inference import Columns, Table, KapaloTables, GroupTables
 from kapalo_py.observation_data import Observation, create_observation
 import sqlite3
 import markdown
+from folium.plugins import locate_control
 
 kurikka_lineaments = Path("data/kurikka.geojson")
 kurikka_bedrock = Path("data/kurikka_bedrock,geojson")
@@ -475,6 +476,9 @@ def webmap_compilation(
             style_function=bedrock_style,
         ).add_to(project_map)
 
+    # Add user location control
+    locate_control.LocateControl().add_to(project_map)
+
     # Save map to live-mapping repository
     project_map.save(str(map_save_path))
 
@@ -487,6 +491,7 @@ def webmap_compilation(
 
     map_save_path.write_text(styled_html)
 
+
     # Remove old
     rmtree(map_imgs_path)
 
@@ -495,3 +500,5 @@ def webmap_compilation(
 
     # Copy css
     path_copy(Path("data/styles.css"), Path("live-mapping/styles.css"))
+
+
