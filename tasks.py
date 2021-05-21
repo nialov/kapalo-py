@@ -113,13 +113,19 @@ def make(_):
 
 
 @task
-def image_convert(c):
+def image_convert(
+    c, orig_img_dir=str(kapalo_imgs_orig_dir), converted_img_dir=str(kapalo_imgs_dir)
+):
     """
     Convert kapalo images to smaller size.
+
+    TODO: Change to python resizer.
     """
+    orig_img_path = Path(orig_img_dir)
+    converted_img_path = Path(converted_img_dir)
     # Convert images to smaller
-    for image in kapalo_imgs_orig_dir.glob("*.jpg"):
-        new_path = kapalo_imgs_dir / image.name
+    for image in orig_img_path.glob("*.jpg"):
+        new_path = converted_img_path / image.name
         c.run(f"convert '{image}' -resize 1000x1000 '{new_path}'")
 
 
@@ -127,6 +133,8 @@ def image_convert(c):
 def kapalo_update(c):
     """
     Download and update kapalo test data.
+
+    TODO: Allow specifying drive.
     """
     # kapalo.sqlite and backup paths
     kapalo_sql_path = Path("data/kapalo_sql/kapalo.sqlite")
@@ -155,6 +163,9 @@ def kapalo_update(c):
 def exports_to_shp(c):
     """
     Convert exports to shapefiles.
+
+    TODO: Is fiona a strict dependency?
+    TODO: Export to onedrive good idea?
     """
     # Export as geopackages and csvs
     c.run("python -m kapalo_py export-observations")
@@ -198,8 +209,58 @@ def exports_to_shp(c):
 def push_map(c):
     """
     Upload compiled map to GitHub.
+
+    TODO: Allow specifying website dir.
     """
     with c.cd("live-mapping"):
         c.run("git add .")
         c.run("git commit -m 'update webmap'")
+        c.run("git push")
+
+
+@task
+def compile_and_push_jon_map(c):
+    """
+    Compile and push jon's map.
+    """
+    web_dir = Path("jon-aland-karikko-mapping")
+    data_dir = Path("data_jon")
+    map_index = web_dir / "index.html"
+    map_imgs = web_dir / "kapalo_imgs"
+    orig_img_path = data_dir / "kapalo_imgs_orig"
+    img_path = data_dir / "kapalo_imgs"
+    sqlite_path = data_dir / "kapalo_sql"
+    project_str = "KARIKKO "
+
+    c.run(
+        "invoke image-convert --orig-img-dir "
+        f"{orig_img_path} --converted-img-dir {img_path}"
+    )
+
+    c.run(
+        " ".join(
+            [
+                "python",
+                "-m",
+                "kapalo_py",
+                "compile-webmap",
+                "--kapalo-sqlite-path",
+                str(sqlite_path),
+                "--kapalo-imgs-path",
+                str(img_path),
+                "--map-save-path",
+                str(map_index),
+                "--map-imgs-path",
+                str(map_imgs),
+                "--project",
+                f"'{project_str}'",
+                "--no-add-extra",
+            ]
+        )
+    )
+
+    with c.cd(web_dir):
+
+        c.run("git add .")
+        c.run("git commit -m 'update jon map'")
         c.run("git push")

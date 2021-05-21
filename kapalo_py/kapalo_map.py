@@ -156,8 +156,8 @@ def location_centroid(observations: pd.DataFrame) -> Tuple[float, float]:
     """
     Get mean location for project.
     """
-    mean_latitude = observations[Columns.LATITUDE].median()
-    mean_longitude = observations[Columns.LONGITUDE].median()
+    mean_latitude = observations[Columns.LATITUDE].mean()
+    mean_longitude = observations[Columns.LONGITUDE].mean()
     assert isinstance(mean_latitude, float)
     assert isinstance(mean_longitude, float)
     return mean_latitude, mean_longitude
@@ -450,6 +450,8 @@ def webmap_compilation(
     map_imgs_path: Path,
     exceptions: Dict[str, str],
     rechecks: List[str],
+    project: str,
+    add_extra: bool,
 ):
     """
     Compile the web map.
@@ -462,13 +464,13 @@ def webmap_compilation(
     # Create the folium map
     project_map = create_project_map(
         kapalo_tables,
-        project="Kurikka GTK",
+        project=project,
         imgs_path=imgs_path,
         exceptions=exceptions,
         rechecks=rechecks,
     )
 
-    if kurikka_lineaments.exists():
+    if kurikka_lineaments.exists() and add_extra:
         # Add lineaments
         folium.GeoJson(
             data="data/kurikka.geojson",
@@ -478,7 +480,7 @@ def webmap_compilation(
 
     # rock_names = gpd.read_file("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
 
-    if kurikka_bedrock.exists():
+    if kurikka_bedrock.exists() and add_extra:
         # Add bedrock
         folium.GeoJson(
             data="data/kurikka_bedrock.geojson",
@@ -496,8 +498,11 @@ def webmap_compilation(
     project_map.save(str(map_save_path))
 
     # Replace image paths to local
+    # replaced_img_paths_html = map_save_path.read_text().replace(
+    #     "data/kapalo_imgs", "kapalo_imgs"
+    # )
     replaced_img_paths_html = map_save_path.read_text().replace(
-        "data/kapalo_imgs", "kapalo_imgs"
+        str(kapalo_imgs_path), kapalo_imgs_path.name
     )
 
     styled_html = add_local_stylesheet(html=replaced_img_paths_html)
