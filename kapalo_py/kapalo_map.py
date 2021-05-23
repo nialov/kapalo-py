@@ -17,7 +17,7 @@ import markdown
 from folium.plugins import locate_control
 
 kurikka_lineaments = Path("data/kurikka.geojson")
-kurikka_bedrock = Path("data/kurikka_bedrock,geojson")
+kurikka_bedrock = Path("data/kurikka_bedrock.geojson")
 
 
 def path_copy(src: Path, dest: Path):
