@@ -25,6 +25,7 @@ class Observation:
     linears: pd.DataFrame = pd.DataFrame()
     images: pd.DataFrame = pd.DataFrame()
     rock_observations: pd.DataFrame = pd.DataFrame()
+    samples: pd.DataFrame = pd.DataFrame()
 
 
 def get_group_data(
@@ -36,30 +37,20 @@ def get_group_data(
     """
     Get group data if group_name is in grouped.
     """
+    group_name = group_name if group_name not in exceptions else exceptions[group_name]
     try:
         group: pd.DataFrame = grouped.get_group(group_name)
-        if group_name in exceptions:
-            logging.error(
-                f"{group_name} marked in exceptions but found original counterpart."
-            )
     except KeyError:
-        if group_name in exceptions:
-            try:
-                group: pd.DataFrame = grouped.get_group(exceptions[group_name])
-            except KeyError:
-                logging.error(
-                    f"Exception {group_name} marked but "
-                    f"counterpart {exceptions[group_name]} not found."
-                )
-                raise
-        else:
-
-            logging.info(f"No data for {group_name}.")
-            return pd.DataFrame()
+        logging.info(f"No data for {group_name}.")
+        return pd.DataFrame()
 
     for col in columns:
         if col not in group.columns:
-            raise ValueError(f"Column {col} not found in group DataFrame.")
+            print(group.columns)
+            raise ValueError(
+                f"Column {col} not found in group DataFrame columns:."
+                f"\n{group.columns}"
+            )
 
     # Filter to wanted columns only
     df_or_srs = group.loc[:, columns] if len(columns) > 0 else group
@@ -99,6 +90,12 @@ def create_observation(
     """
     Create Observation from data.
     """
+    samples = get_group_data(
+        group_name=obs_id,
+        grouped=group_tables.grouped_samples,
+        columns=[Columns.SAMPLE_ID, Columns.FIELD_NAME],
+        exceptions=exceptions,
+    )
     tectonics = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_tectonic,
@@ -149,6 +146,7 @@ def create_observation(
         longitude=longitude,
         remarks=remarks,
         rock_observations=rock_observations,
+        samples=samples,
     )
 
     return observation

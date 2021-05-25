@@ -93,6 +93,7 @@ def read_kapalo_table(path: Path) -> KapaloTables:
     rock_observations_points = sql_table_to_dataframe(Table.ROCK_OBS.value, db)
     linear_structures = sql_table_to_dataframe(Table.LINEAR.value, db)
     images = sql_table_to_dataframe(Table.IMAGES.value, db)
+    samples = sql_table_to_dataframe(Table.SAMPLES.value, db)
 
     return KapaloTables(
         observations=observations,
@@ -101,6 +102,7 @@ def read_kapalo_table(path: Path) -> KapaloTables:
         linear_structures=linear_structures,
         rock_observation_points=rock_observations_points,
         images=images,
+        samples=samples,
     )
 
 
@@ -115,6 +117,7 @@ def gather_observation_data(
     grouped_linear = kapalo_tables.linear_structures.groupby(Columns.TM_GID)
     grouped_images = kapalo_tables.images.groupby(Columns.OBS_ID)
     grouped_rock_obs = kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID)
+    grouped_samples = kapalo_tables.samples.groupby(Columns.OBS_ID)
 
     group_tables = GroupTables(
         grouped_tectonic=grouped_tectonic,
@@ -122,6 +125,7 @@ def gather_observation_data(
         grouped_images=grouped_images,
         grouped_linear=grouped_linear,
         grouped_rock_obs=grouped_rock_obs,
+        grouped_samples=grouped_samples,
     )
 
     observations = []
@@ -239,7 +243,8 @@ def observation_html(observation: Observation, imgs_path: Path):
     """
     Create html summary of observation.
     """
-    markdown_text = f"### {observation.obs_id}\n"
+    markdown_text_list = []
+    markdown_text_list.append(f"### {observation.obs_id}\n")
 
     # Tectonic measurements
     for dataframe, dataframe_label in zip(
@@ -247,19 +252,31 @@ def observation_html(observation: Observation, imgs_path: Path):
             observation.planars,
             observation.linears,
             observation.rock_observations,
+            observation.samples,
         ),
-        ("Planar Structures", "Linear Structures", "Rock Observations"),
+        (
+            "Planar Structures",
+            "Linear Structures",
+            "Rock Observations",
+            "Samples",
+        ),
     ):
-        markdown_text += f"\n#### {dataframe_label if not dataframe.empty else ''}\n\n"
-        markdown_text += dataframe_to_markdown(dataframe=dataframe)
+        markdown_text_list.append(
+            f"\n#### {dataframe_label if not dataframe.empty else ''}\n\n"
+        )
+        markdown_text_list.append(dataframe_to_markdown(dataframe=dataframe))
 
-    markdown_text += "\n#### Observation remarks\n\n"
-    markdown_text += observation.remarks
+    markdown_text_list.append("\n#### Observation remarks\n\n")
+    markdown_text_list.append(observation.remarks)
 
-    markdown_text += "\n#### Images\n\n"
-    markdown_text += observation_image_markdown(
-        observation=observation, imgs_path=imgs_path
+    markdown_text_list.append(
+        "\n#### Images\n\n" if not observation.images.empty else "\n"
     )
+    markdown_text_list.append(
+        observation_image_markdown(observation=observation, imgs_path=imgs_path)
+    )
+
+    markdown_text = "".join(markdown_text_list)
 
     html = markdown.markdown(markdown_text, extensions=["tables"])
 
@@ -360,16 +377,16 @@ def observation_marker(
 
 
 def gather_project_observations_multiple(
-    kapalo_tables: List[List[KapaloTables]],
+    all_kapalo_tables: List[KapaloTables],
     project: str,
     exceptions: Dict[str, str],
-) -> Tuple[List[Observation], List[List[KapaloTables]]]:
+) -> Tuple[List[List[Observation]], List[KapaloTables]]:
     """
     Gather all project observations from multiple KapaloTables.
     """
     all_observations = []
     all_project_tables = []
-    for kapalo_tables in kapalo_tables:
+    for kapalo_tables in all_kapalo_tables:
         observations, kapalo_tables = gather_project_observations(
             kapalo_tables=kapalo_tables,
             projects=(project,),
