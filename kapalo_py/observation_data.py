@@ -71,8 +71,13 @@ def resolve_tm_gid(tectonics: pd.DataFrame) -> Optional[str]:
         gdb_ids = tectonics[Columns.GDB_ID].unique()
     except KeyError:
         return None
-    if not len(gdb_ids) == 1:
-        assert len(gdb_ids) == 0
+    if len(gdb_ids) != 1:
+        if len(gdb_ids) != 0:
+            logging.error(
+                f"Expected one tectonic measurement id per observation.\n"
+                f"Found {len(gdb_ids)} which were {list(gdb_ids)}. Choosing last."
+            )
+            return gdb_ids[-1]
         return None
     gdb_id: str = gdb_ids[0]
 
@@ -90,12 +95,6 @@ def create_observation(
     """
     Create Observation from data.
     """
-    samples = get_group_data(
-        group_name=obs_id,
-        grouped=group_tables.grouped_samples,
-        columns=[Columns.SAMPLE_ID, Columns.FIELD_NAME],
-        exceptions=exceptions,
-    )
     tectonics = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_tectonic,
@@ -104,25 +103,26 @@ def create_observation(
     )
     gdb_id = resolve_tm_gid(tectonics=tectonics)
     if gdb_id is None:
-        return Observation(
-            obs_id=obs_id, gdb_id="", latitude=latitude, longitude=longitude, remarks=""
-        )
+        planars = pd.DataFrame()
+        linears = pd.DataFrame()
+        gdb_id = ""
 
-    planars = get_group_data(
-        group_name=gdb_id,
-        grouped=group_tables.grouped_planar,
-        columns=(
-            Columns.DIP,
-            Columns.DIP_DIRECTION,
-            Columns.STYPE_TEXT,
-            Columns.FOL_TYPE_TEXT,
-        ),
-    )
-    linears = get_group_data(
-        group_name=gdb_id,
-        grouped=group_tables.grouped_linear,
-        columns=(Columns.DIRECTION, Columns.PLUNGE, Columns.STYPE_TEXT),
-    )
+    else:
+        planars = get_group_data(
+            group_name=gdb_id,
+            grouped=group_tables.grouped_planar,
+            columns=(
+                Columns.DIP,
+                Columns.DIP_DIRECTION,
+                Columns.STYPE_TEXT,
+                Columns.FOL_TYPE_TEXT,
+            ),
+        )
+        linears = get_group_data(
+            group_name=gdb_id,
+            grouped=group_tables.grouped_linear,
+            columns=(Columns.DIRECTION, Columns.PLUNGE, Columns.STYPE_TEXT),
+        )
 
     images = get_group_data(
         group_name=obs_id,
@@ -134,6 +134,12 @@ def create_observation(
         group_name=obs_id,
         grouped=group_tables.grouped_rock_obs,
         columns=(Columns.REMARKS, Columns.FIELD_NAME),
+    )
+    samples = get_group_data(
+        group_name=obs_id,
+        grouped=group_tables.grouped_samples,
+        columns=[Columns.SAMPLE_ID, Columns.FIELD_NAME],
+        exceptions=exceptions,
     )
 
     observation = Observation(
