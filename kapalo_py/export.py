@@ -4,12 +4,13 @@ Utilities for exporting kapalo data.
 
 from kapalo_py.schema_inference import Columns
 from kapalo_py.observation_data import Observation
+from itertools import chain
 import kapalo_py.kapalo_map as kapalo_map
 from pathlib import Path
 import pandas as pd
 from shapely.geometry import Point
 import geopandas as gpd
-from typing import List, Tuple, Sequence
+from typing import List, Tuple, Sequence, Dict
 
 
 def compile_type_dataframes(
@@ -51,6 +52,7 @@ def export_projects_to_folder(
     kapalo_sqlite_path: Path,
     export_folder: Path,
     projects: Sequence[str],
+    exceptions: Dict[str, str],
 ):
     """
     Export kapalo projects to folder.
@@ -58,24 +60,22 @@ def export_projects_to_folder(
     # Read kapalo.sqlite
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
-    assert False
-    # Gather observations
-    observations, kapalo_tables = kapalo_map.gather_project_observations(
-        kapalo_tables=kapalo_tables,
-        projects=projects,
+    if len(projects) != 1:
+        raise NotImplementedError("Multiproject export not implemented.")
+
+    (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
+        kapalo_tables, project=projects[0], exceptions=exceptions
     )
 
-    if len(observations) == 0:
+    observations_flat = list(chain(*all_observations))
+    if len(observations_flat) == 0:
         print("No Observations gathered/found.")
         return
-
     # Iterate over chosen observation types
     for observation_type in ("planars", "linears"):
 
-        assert hasattr(observations[0], observation_type)
-
         dataframe, geodataframe = compile_type_dataframes(
-            observations=observations, observation_type=observation_type
+            observations=observations_flat, observation_type=observation_type
         )
 
         dataframe_path = Path(export_folder / f"{observation_type}.csv")
@@ -83,3 +83,6 @@ def export_projects_to_folder(
 
         dataframe.to_csv(dataframe_path)
         geodataframe.to_file(geodataframe_path, driver="GPKG")
+        geodataframe.to_file(
+            geodataframe_path.with_suffix(".shp"), driver="ESRI Shapefile"
+        )

@@ -75,21 +75,24 @@ def compile_webmap(
 def export_observations(
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     kapalo_sqlite_path: Path = typer.Option(
-        default=Path("data/kapalo_sql/"),
+        default="data/kapalo_sql/",
         exists=True,
-        dir_okay=False,
+        file_okay=False,
     ),
     export_folder: Path = typer.Option(
-        default=Path("exports"),
+        default="exports",
         exists=True,
         dir_okay=True,
     ),
+    config_path: Path = typer.Option(default="mapconfig.ini"),
 ):
     """
     Export kapalo tables.
     """
+    exceptions, _ = read_config(config_path)
     export.export_projects_to_folder(
         kapalo_sqlite_path=kapalo_sqlite_path,
         export_folder=export_folder,
         projects=projects,
+        exceptions=exceptions,
     )
