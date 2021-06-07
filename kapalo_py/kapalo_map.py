@@ -3,18 +3,20 @@ Making spatial maps.
 """
 
 import logging
-from itertools import chain
-from shutil import copytree, rmtree, copy
-import folium
-from itertools import compress
-import pandas as pd
-from typing import List, Tuple, Sequence, Dict
-from pathlib import Path
-from kapalo_py.schema_inference import Columns, Table, KapaloTables, GroupTables
-from kapalo_py.observation_data import Observation, create_observation
 import sqlite3
+from functools import lru_cache
+from itertools import chain, compress
+from pathlib import Path
+from shutil import copy, copytree, rmtree
+from typing import Dict, List, Sequence, Tuple
+
+import folium
 import markdown
+import pandas as pd
 from folium.plugins import locate_control
+
+from kapalo_py.observation_data import Observation, create_observation
+from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
 kurikka_lineaments = Path("data/kurikka.geojson")
 kurikka_bedrock = Path("data/kurikka_bedrock.geojson")
@@ -84,16 +86,16 @@ def read_kapalo_table(path: Path) -> KapaloTables:
     """
     Read kapalo.sqlite to create KapaloTables object.
     """
-    db = sqlite3.connect(path)
-    observations = sql_table_to_dataframe(Table.OBSERVATIONS.value, db)
-    planar_structures = sql_table_to_dataframe(Table.PLANAR.value, db)
+    database = sqlite3.connect(path)
+    observations = sql_table_to_dataframe(Table.OBSERVATIONS.value, database)
+    planar_structures = sql_table_to_dataframe(Table.PLANAR.value, database)
     tectonic_measurements = sql_table_to_dataframe(
-        Table.TECTONIC_MEASUREMENTS.value, db
+        Table.TECTONIC_MEASUREMENTS.value, database
     )
-    rock_observations_points = sql_table_to_dataframe(Table.ROCK_OBS.value, db)
-    linear_structures = sql_table_to_dataframe(Table.LINEAR.value, db)
-    images = sql_table_to_dataframe(Table.IMAGES.value, db)
-    samples = sql_table_to_dataframe(Table.SAMPLES.value, db)
+    rock_observations_points = sql_table_to_dataframe(Table.ROCK_OBS.value, database)
+    linear_structures = sql_table_to_dataframe(Table.LINEAR.value, database)
+    images = sql_table_to_dataframe(Table.IMAGES.value, database)
+    samples = sql_table_to_dataframe(Table.SAMPLES.value, database)
 
     return KapaloTables(
         observations=observations,
@@ -112,35 +114,37 @@ def gather_observation_data(
     """
     Get data for observations.
     """
-    grouped_tectonic = kapalo_tables.tectonic_measurements.groupby(Columns.OBS_ID)
-    grouped_planar = kapalo_tables.planar_structures.groupby(Columns.TM_GID)
-    grouped_linear = kapalo_tables.linear_structures.groupby(Columns.TM_GID)
-    grouped_images = kapalo_tables.images.groupby(Columns.OBS_ID)
-    grouped_rock_obs = kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID)
-    grouped_samples = kapalo_tables.samples.groupby(Columns.OBS_ID)
+    # grouped_tectonic = kapalo_tables.tectonic_measurements.groupby(Columns.OBS_ID)
+    # grouped_planar = kapalo_tables.planar_structures.groupby(Columns.TM_GID)
+    # grouped_linear = kapalo_tables.linear_structures.groupby(Columns.TM_GID)
+    # grouped_images = kapalo_tables.images.groupby(Columns.OBS_ID)
+    # grouped_rock_obs = kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID)
+    # grouped_samples = kapalo_tables.samples.groupby(Columns.OBS_ID)
 
     group_tables = GroupTables(
-        grouped_tectonic=grouped_tectonic,
-        grouped_planar=grouped_planar,
-        grouped_images=grouped_images,
-        grouped_linear=grouped_linear,
-        grouped_rock_obs=grouped_rock_obs,
-        grouped_samples=grouped_samples,
+        grouped_tectonic=kapalo_tables.tectonic_measurements.groupby(Columns.OBS_ID),
+        grouped_planar=kapalo_tables.planar_structures.groupby(Columns.TM_GID),
+        grouped_images=kapalo_tables.images.groupby(Columns.OBS_ID),
+        grouped_linear=kapalo_tables.linear_structures.groupby(Columns.TM_GID),
+        grouped_rock_obs=kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID),
+        grouped_samples=kapalo_tables.samples.groupby(Columns.OBS_ID),
     )
 
     observations = []
 
-    for obs_id, latitude, longitude, remarks in zip(
+    for obs_id, latitude, longitude, remarks, project in zip(
         kapalo_tables.observations[Columns.OBS_ID].values,
         kapalo_tables.observations[Columns.LATITUDE].values,
         kapalo_tables.observations[Columns.LONGITUDE].values,
         kapalo_tables.observations[Columns.REMARKS].values,
+        kapalo_tables.observations[Columns.PROJECT].values,
     ):
 
         assert isinstance(obs_id, str)
         assert isinstance(latitude, float)
         assert isinstance(longitude, float)
         assert isinstance(remarks, str)
+        assert isinstance(project, str)
 
         # Create an Observation
         observation = create_observation(
@@ -150,6 +154,7 @@ def gather_observation_data(
             longitude=longitude,
             remarks=remarks,
             exceptions=exceptions,
+            project=project,
         )
 
         observations.append(observation)
@@ -180,18 +185,28 @@ def dataframe_to_markdown(dataframe: pd.DataFrame) -> str:
     return markdown_str
 
 
+@lru_cache(maxsize=None)
+def get_image_paths(path: Path) -> List[Path]:
+    """
+    Get jpg files at path.
+    """
+    img_paths = list(path.glob("*.jpg"))
+    return img_paths
+
+
 def observation_image_markdown(observation: Observation, imgs_path: Path) -> str:
     """
     Create markdown for images.
     """
+    markdown_text_list = []
     markdown_text = "\n"
+    markdown_text_list.append(markdown_text)
 
     if Columns.PICTURE_ID not in observation.images.columns:
         return markdown_text
 
     # Get all images in imgs_path
-    # TODO: Do not get img paths multiple times
-    img_paths = list(imgs_path.glob("*.jpg"))
+    img_paths = get_image_paths(path=imgs_path)
 
     # Iterate over image ids in observation
     for idx, (image_id, image_caption) in enumerate(
@@ -204,7 +219,8 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
         assert isinstance(image_caption, str)
 
         # Add linebreak
-        markdown_text += "\n"
+        # markdown_text += "\n"
+        markdown_text_list.append("\n")
 
         # assert type
         assert isinstance(image_id, str)
@@ -214,7 +230,7 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
 
         # Report no matches
         if sum(matches) != 1:
-            logging.error(f"No match for image id {image_id} in {imgs_path}")
+            logging.error("No match for image id {} in {}".format(image_id, imgs_path))
             return "\n"
 
         # Only one match exists, compress img_paths to that match path
@@ -223,20 +239,22 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
         match_path = match[0]
         # One image match, correct
 
-        # Add image markdown text to markdown_text
+        # Add image markdown text to markdown_text_list
         # Example link inside markdown image:
         # <img src="http://www.google.com.au/images/nav_logo7.png">
         if idx < 2:
 
             # Add image and link
-            markdown_text += f"[![{image_caption}]({match_path})]({match_path})"
-            markdown_text += image_caption
+            markdown_text_list.append(
+                f"[![{image_caption}]({match_path})]({match_path})\n\n"
+            )
+            markdown_text_list.append(f"*{image_caption}*")
         else:
 
             # Add only link text
-            markdown_text += f"[{image_caption, image_id}]({match_path})"
+            markdown_text_list.append(f"\n[{image_caption, image_id}]({match_path})")
 
-    return markdown_text
+    return "".join(markdown_text_list)
 
 
 def observation_html(observation: Observation, imgs_path: Path):
@@ -413,7 +431,7 @@ def create_project_map(
     )
 
     # Initialize map and center it on the observations
-    map = folium.Map(
+    folium_map = folium.Map(
         location=location_centroid(
             observations=pd.concat(
                 [
@@ -428,15 +446,15 @@ def create_project_map(
     for observation in chain(*all_observations):
         obs_id = observation.obs_id
         if obs_id in observation_id_set:
-            logging.error(f"Duplicate obs_id for {obs_id}. Skipping.")
+            logging.error("Duplicate obs_id for {}. Skipping.".format(obs_id))
             continue
         observation_id_set.add(obs_id)
 
         marker = observation_marker(
             observation=observation, imgs_path=imgs_path, rechecks=rechecks
         )
-        marker.add_to(map)
-    return map
+        marker.add_to(folium_map)
+    return folium_map
 
 
 def lineament_style(_):

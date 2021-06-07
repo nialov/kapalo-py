@@ -1,12 +1,14 @@
 """
 Command line integration.
 """
-import typer
-import kapalo_py.kapalo_map as kapalo_map
-import kapalo_py.export as export
-from pathlib import Path
-from typing import List, Dict, Tuple
 import configparser
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+import typer
+
+import kapalo_py.export as export
+import kapalo_py.kapalo_map as kapalo_map
 
 app = typer.Typer()
 

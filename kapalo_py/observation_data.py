@@ -3,10 +3,11 @@ Observation data management and parsing.
 """
 import logging
 from dataclasses import dataclass
-from kapalo_py.schema_inference import Columns, GroupTables
-from typing import Optional, Sequence, Dict
+from typing import Dict, Optional, Sequence
 
 import pandas as pd
+
+from kapalo_py.schema_inference import Columns, GroupTables
 
 
 @dataclass
@@ -21,6 +22,7 @@ class Observation:
     latitude: float
     longitude: float
     remarks: str
+    project: str
     planars: pd.DataFrame = pd.DataFrame()
     linears: pd.DataFrame = pd.DataFrame()
     images: pd.DataFrame = pd.DataFrame()
@@ -32,16 +34,18 @@ def get_group_data(
     group_name: str,
     grouped,
     columns: Sequence[str],
-    exceptions: Dict[str, str] = dict(),
+    exceptions: Optional[Dict[str, str]] = None,
 ) -> pd.DataFrame:
     """
     Get group data if group_name is in grouped.
     """
+    if exceptions is None:
+        exceptions = dict()
     group_name = group_name if group_name not in exceptions else exceptions[group_name]
     try:
         group: pd.DataFrame = grouped.get_group(group_name)
     except KeyError:
-        logging.info(f"No data for {group_name}.")
+        logging.info("No data for {}.".format(group_name))
         return pd.DataFrame()
 
     for col in columns:
@@ -90,6 +94,7 @@ def create_observation(
     latitude: float,
     longitude: float,
     remarks: str,
+    project: str,
     exceptions: Dict[str, str],
 ) -> Observation:
     """
@@ -153,6 +158,7 @@ def create_observation(
         remarks=remarks,
         rock_observations=rock_observations,
         samples=samples,
+        project=project,
     )
 
     return observation

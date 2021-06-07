@@ -2,10 +2,12 @@
 Tests for kapalo_map.py.
 """
 
-import pytest
-import tests
-import kapalo_py.kapalo_map as kapalo_map
 from pathlib import Path
+
+import pytest
+
+import kapalo_py.kapalo_map as kapalo_map
+import tests
 
 
 @pytest.mark.parametrize("html_str", tests.test_add_local_stylesheet_params())

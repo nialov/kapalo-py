@@ -5,8 +5,8 @@ Most tasks employ nox to create a virtual session for testing.
 """
 from pathlib import Path
 from shutil import copy
-from invoke import task
-from invoke import UnexpectedExit
+
+from invoke import UnexpectedExit, task
 
 NOX_PARALLEL_SESSIONS = ("tests_pip",)
 

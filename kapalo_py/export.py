@@ -2,15 +2,17 @@
 Utilities for exporting kapalo data.
 """
 
-from kapalo_py.schema_inference import Columns
-from kapalo_py.observation_data import Observation
 from itertools import chain
-import kapalo_py.kapalo_map as kapalo_map
 from pathlib import Path
+from typing import Dict, List, Sequence
+
+import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
-import geopandas as gpd
-from typing import List, Sequence, Dict
+
+import kapalo_py.kapalo_map as kapalo_map
+from kapalo_py.observation_data import Observation
+from kapalo_py.schema_inference import Columns
 
 
 def compile_type_dataframe(
@@ -33,6 +35,9 @@ def compile_type_dataframe(
 
         # Add column with remarks
         type_df[Columns.REMARKS] = observation.remarks
+
+        # Add column with project
+        type_df[Columns.PROJECT] = observation.project
 
         # Add column with Point geometry
         type_df[Columns.GEOMETRY] = Point(observation.longitude, observation.latitude)

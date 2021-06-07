@@ -4,7 +4,7 @@ Tests for kapalo-py.
 
 from functools import lru_cache
 
-simple_html_for_matching = """
+SIMPLE_HTML_FOR_MATCHING = """
 
     <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
     <style>#map {position:absole;top:0;bottom:0;right:0;left:0;}</style>
@@ -22,4 +22,4 @@ def test_add_local_stylesheet_params():
     """
     Params for test_add_local_stylesheet.
     """
-    return [simple_html_for_matching]
+    return [SIMPLE_HTML_FOR_MATCHING]

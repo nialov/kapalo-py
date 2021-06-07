@@ -2,13 +2,14 @@
 Documentation of schema links.
 """
 
+from dataclasses import asdict, dataclass, fields
 from enum import Enum, unique
+from itertools import chain
+from typing import Sequence
+
 import numpy as np
 import pandas as pd
-from itertools import chain
-from dataclasses import dataclass, asdict, fields
 from pandas.core.groupby.generic import DataFrameGroupBy
-from typing import Sequence
 
 
 class Columns:
@@ -72,18 +73,16 @@ class KapaloTables:
         Validate all DataFrames.
         """
         assert all(
-            [
-                isinstance(df, pd.DataFrame)
-                for df in (
-                    self.observations,
-                    self.tectonic_measurements,
-                    self.planar_structures,
-                    self.linear_structures,
-                    self.rock_observation_points,
-                    self.images,
-                    self.samples,
-                )
-            ]
+            isinstance(df, pd.DataFrame)
+            for df in (
+                self.observations,
+                self.tectonic_measurements,
+                self.planar_structures,
+                self.linear_structures,
+                self.rock_observation_points,
+                self.images,
+                self.samples,
+            )
         )
 
     def copy(self):
