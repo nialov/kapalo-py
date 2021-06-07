@@ -10,14 +10,16 @@ from pathlib import Path
 import pandas as pd
 from shapely.geometry import Point
 import geopandas as gpd
-from typing import List, Tuple, Sequence, Dict
+from typing import List, Sequence, Dict
 
 
-def compile_type_dataframes(
+def compile_type_dataframe(
     observations: List[Observation], observation_type: str
-) -> Tuple[pd.DataFrame, gpd.GeoDataFrame]:
+) -> gpd.GeoDataFrame:
     """
     Create DataFrame of type observations.
+
+    type is linear or planar.
     """
     type_observations = []
 
@@ -45,7 +47,7 @@ def compile_type_dataframes(
 
     assert isinstance(geodataframe, gpd.GeoDataFrame)
 
-    return dataframe, geodataframe
+    return geodataframe
 
 
 def export_projects_to_folder(
@@ -74,14 +76,25 @@ def export_projects_to_folder(
     # Iterate over chosen observation types
     for observation_type in ("planars", "linears"):
 
-        dataframe, geodataframe = compile_type_dataframes(
+        geodataframe = compile_type_dataframe(
             observations=observations_flat, observation_type=observation_type
         )
 
         dataframe_path = Path(export_folder / f"{observation_type}.csv")
         geodataframe_path = Path(export_folder / f"{observation_type}.gpkg")
 
-        dataframe.to_csv(dataframe_path)
+        points: List[Point] = [
+            point
+            for point in geodataframe["geometry"].values
+            if isinstance(point, Point)
+        ]
+
+        assert len(points) == geodataframe.shape[0]
+
+        geodataframe["x"] = [point.x for point in points]
+        geodataframe["y"] = [point.y for point in points]
+
+        geodataframe.drop(columns=["geometry"]).to_csv(dataframe_path)
         geodataframe.to_file(geodataframe_path, driver="GPKG")
         geodataframe.to_file(
             geodataframe_path.with_suffix(".shp"), driver="ESRI Shapefile"
