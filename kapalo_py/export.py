@@ -62,11 +62,8 @@ def export_projects_to_folder(
     # Read kapalo.sqlite
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
-    if len(projects) != 1:
-        raise NotImplementedError("Multiproject export not implemented.")
-
     (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
-        kapalo_tables, project=projects[0], exceptions=exceptions
+        kapalo_tables, projects=projects, exceptions=exceptions
     )
 
     observations_flat = list(chain(*all_observations))

@@ -378,7 +378,7 @@ def observation_marker(
 
 def gather_project_observations_multiple(
     all_kapalo_tables: List[KapaloTables],
-    project: str,
+    projects: Sequence[str],
     exceptions: Dict[str, str],
 ) -> Tuple[List[List[Observation]], List[KapaloTables]]:
     """
@@ -389,7 +389,7 @@ def gather_project_observations_multiple(
     for kapalo_tables in all_kapalo_tables:
         observations, kapalo_tables = gather_project_observations(
             kapalo_tables=kapalo_tables,
-            projects=(project,),
+            projects=projects,
             exceptions=exceptions,
         )
         all_observations.append(observations)
