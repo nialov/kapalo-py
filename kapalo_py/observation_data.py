@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, Optional, Sequence
 
+import numpy as np
 import pandas as pd
 
 from kapalo_py.schema_inference import Columns, GroupTables
@@ -28,6 +29,7 @@ class Observation:
     images: pd.DataFrame = pd.DataFrame()
     rock_observations: pd.DataFrame = pd.DataFrame()
     samples: pd.DataFrame = pd.DataFrame()
+    textures: pd.DataFrame = pd.DataFrame()
 
 
 def get_group_data(
@@ -46,7 +48,7 @@ def get_group_data(
         group: pd.DataFrame = grouped.get_group(group_name)
     except KeyError:
         logging.info("No data for {}.".format(group_name))
-        return pd.DataFrame()
+        return pd.DataFrame(columns=columns)
 
     for col in columns:
         if col not in group.columns:
@@ -141,16 +143,52 @@ def create_observation(
         columns=(Columns.PICTURE_ID, Columns.REMARKS),
     )
 
-    rock_observations = get_group_data(
-        group_name=obs_id,
-        grouped=group_tables.grouped_rock_obs,
-        columns=(Columns.REMARKS, Columns.FIELD_NAME),
-    )
     samples = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_samples,
         columns=[Columns.SAMPLE_ID, Columns.FIELD_NAME],
         exceptions=exceptions,
+    )
+
+    rock_observations = get_group_data(
+        group_name=obs_id,
+        grouped=group_tables.grouped_rock_obs,
+        columns=(
+            Columns.REMARKS,
+            Columns.FIELD_NAME,
+            Columns.ROCK_NAME,
+            Columns.GDB_ID,
+        ),
+    )
+
+    texture_dfs = []
+    rock_textures = []
+
+    for rop_gid in rock_observations[Columns.GDB_ID].values:
+
+        assert isinstance(rop_gid, str)
+
+        textures = get_group_data(
+            group_name=rop_gid,
+            grouped=group_tables.grouped_textures,
+            columns=[Columns.ST_2, Columns.ST_1],
+            exceptions=exceptions,
+        )
+
+        if (not textures.empty) and (textures.shape[0] != 0):
+            texture_dfs.append(textures)
+            rock_textures.append(str(tuple(textures[Columns.ST_2].values)))
+        else:
+            rock_textures.append(np.nan)
+
+    rock_observations[Columns.ST_2] = rock_textures
+    rock_observations = rock_observations.drop(columns=[Columns.GDB_ID])
+    assert isinstance(rock_observations, pd.DataFrame)
+
+    all_textures = (
+        pd.concat(texture_dfs, ignore_index=True)
+        if len(texture_dfs) != 0
+        else pd.DataFrame()
     )
 
     observation = Observation(
@@ -165,6 +203,7 @@ def create_observation(
         rock_observations=rock_observations,
         samples=samples,
         project=project,
+        textures=all_textures,
     )
 
     return observation

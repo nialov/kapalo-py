@@ -37,6 +37,10 @@ class Columns:
     SAMPLE_ID = "SAMPLEID"
     FOL_TYPE = "F_TYPE"
     STYPE = "STYPE"
+    ROCK_NAME = "ROCK_NAME"
+    ROP_GID = "ROP_GID"
+    ST_1 = "ST_1"
+    ST_2 = "ST_2"
 
 
 @unique
@@ -53,6 +57,7 @@ class Table(Enum):
     LINEAR = "BFDS_Linear_structure"
     IMAGES = "Outcrop_picture"
     SAMPLES = "Sample"
+    TEXTURES = "BFDS_SaT"
 
 
 @dataclass
@@ -69,6 +74,7 @@ class KapaloTables:
     rock_observation_points: pd.DataFrame
     images: pd.DataFrame
     samples: pd.DataFrame
+    textures: pd.DataFrame
 
     def __post_init__(self):
         """
@@ -84,6 +90,7 @@ class KapaloTables:
                 self.rock_observation_points,
                 self.images,
                 self.samples,
+                self.textures,
             )
         )
 
@@ -167,6 +174,7 @@ class GroupTables:
     grouped_images: DataFrameGroupBy
     grouped_rock_obs: DataFrameGroupBy
     grouped_samples: DataFrameGroupBy
+    grouped_textures: DataFrameGroupBy
 
 
 # connections = [

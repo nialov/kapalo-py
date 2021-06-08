@@ -92,9 +92,23 @@ def export_observations(
     Export kapalo tables.
     """
     exceptions, _ = read_config(config_path)
-    export.export_projects_to_folder(
+
+    geodataframes = export.export_projects_to_geodataframes(
         kapalo_sqlite_path=kapalo_sqlite_path,
-        export_folder=export_folder,
         projects=projects,
         exceptions=exceptions,
     )
+
+    for observation_type, geodataframe in geodataframes.items():
+
+        dataframe_path = Path(export_folder / f"{observation_type}.csv")
+        geodataframe_path = Path(export_folder / f"{observation_type}.gpkg")
+
+        export.write_geodataframe(
+            geodataframe=geodataframe,
+            dataframe_path=dataframe_path,
+            geodataframe_path=geodataframe_path,
+        )
+
+        assert dataframe_path.exists()
+        assert geodataframe_path.exists()

@@ -11,6 +11,7 @@ import pandas as pd
 from shapely.geometry import Point
 
 import kapalo_py.kapalo_map as kapalo_map
+import kapalo_py.utils as utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import Columns
 
@@ -55,12 +56,22 @@ def compile_type_dataframe(
     return geodataframe
 
 
-def export_projects_to_folder(
+def write_geodataframe(
+    geodataframe: gpd.GeoDataFrame, dataframe_path: Path, geodataframe_path: Path
+):
+    """
+    Write geodataframe to folder as csv, shapefile and geopackage.
+    """
+    geodataframe.drop(columns=["geometry"]).to_csv(dataframe_path)
+    geodataframe.to_file(geodataframe_path, driver="GPKG")
+    geodataframe.to_file(geodataframe_path.with_suffix(".shp"), driver="ESRI Shapefile")
+
+
+def export_projects_to_geodataframes(
     kapalo_sqlite_path: Path,
-    export_folder: Path,
     projects: Sequence[str],
     exceptions: Dict[str, str],
-):
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     Export kapalo projects to folder.
     """
@@ -71,19 +82,19 @@ def export_projects_to_folder(
         kapalo_tables, projects=projects, exceptions=exceptions
     )
 
+    geodataframes = dict()
+
     observations_flat = list(chain(*all_observations))
     if len(observations_flat) == 0:
         print("No Observations gathered/found.")
-        return
+        return geodataframes
+
     # Iterate over chosen observation types
-    for observation_type in ("planars", "linears"):
+    for observation_type in (utils.PLANAR_TYPE, utils.LINEAR_TYPE, utils.ROCK_OBS_TYPE):
 
         geodataframe = compile_type_dataframe(
             observations=observations_flat, observation_type=observation_type
         )
-
-        dataframe_path = Path(export_folder / f"{observation_type}.csv")
-        geodataframe_path = Path(export_folder / f"{observation_type}.gpkg")
 
         points: List[Point] = [
             point
@@ -96,8 +107,6 @@ def export_projects_to_folder(
         geodataframe["x"] = [point.x for point in points]
         geodataframe["y"] = [point.y for point in points]
 
-        geodataframe.drop(columns=["geometry"]).to_csv(dataframe_path)
-        geodataframe.to_file(geodataframe_path, driver="GPKG")
-        geodataframe.to_file(
-            geodataframe_path.with_suffix(".shp"), driver="ESRI Shapefile"
-        )
+        geodataframes[observation_type] = geodataframe
+
+    return geodataframes

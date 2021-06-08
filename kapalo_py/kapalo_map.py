@@ -96,6 +96,7 @@ def read_kapalo_table(path: Path) -> KapaloTables:
     linear_structures = sql_table_to_dataframe(Table.LINEAR.value, database)
     images = sql_table_to_dataframe(Table.IMAGES.value, database)
     samples = sql_table_to_dataframe(Table.SAMPLES.value, database)
+    textures = sql_table_to_dataframe(Table.TEXTURES.value, database)
 
     return KapaloTables(
         observations=observations,
@@ -105,6 +106,7 @@ def read_kapalo_table(path: Path) -> KapaloTables:
         rock_observation_points=rock_observations_points,
         images=images,
         samples=samples,
+        textures=textures,
     )
 
 
@@ -128,6 +130,7 @@ def gather_observation_data(
         grouped_linear=kapalo_tables.linear_structures.groupby(Columns.TM_GID),
         grouped_rock_obs=kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID),
         grouped_samples=kapalo_tables.samples.groupby(Columns.OBS_ID),
+        grouped_textures=kapalo_tables.textures.groupby(Columns.ROP_GID),
     )
 
     observations = []
@@ -271,12 +274,14 @@ def observation_html(observation: Observation, imgs_path: Path):
             observation.linears,
             observation.rock_observations,
             observation.samples,
+            observation.textures,
         ),
         (
             "Planar Structures",
             "Linear Structures",
             "Rock Observations",
             "Samples",
+            "Textures",
         ),
     ):
         markdown_text_list.append(
