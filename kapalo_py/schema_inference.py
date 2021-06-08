@@ -35,6 +35,8 @@ class Columns:
     FIELD_NAME = "FIELD_NAME"
     GEOMETRY = "geometry"
     SAMPLE_ID = "SAMPLEID"
+    FOL_TYPE = "F_TYPE"
+    STYPE = "STYPE"
 
 
 @unique

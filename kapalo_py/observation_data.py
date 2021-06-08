@@ -121,12 +121,18 @@ def create_observation(
                 Columns.DIP_DIRECTION,
                 Columns.STYPE_TEXT,
                 Columns.FOL_TYPE_TEXT,
+                Columns.STYPE,
             ),
         )
         linears = get_group_data(
             group_name=gdb_id,
             grouped=group_tables.grouped_linear,
-            columns=(Columns.DIRECTION, Columns.PLUNGE, Columns.STYPE_TEXT),
+            columns=(
+                Columns.DIRECTION,
+                Columns.PLUNGE,
+                Columns.STYPE_TEXT,
+                Columns.STYPE,
+            ),
         )
 
     images = get_group_data(
