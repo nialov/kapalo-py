@@ -54,7 +54,7 @@ def compile_webmap(
     map_save_path: Path = typer.Option(default=Path("live-mapping/index.html")),
     map_imgs_path: Path = typer.Option(default=Path("live-mapping/kapalo_imgs")),
     config_path: Path = typer.Option(default=Path("mapconfig.ini")),
-    project: str = typer.Option(default="Kurikka GTK"),
+    projects: List[str] = typer.Option(["Kurikka GTK"]),
     add_extra: bool = typer.Option(default=True),
 ):
     """
@@ -68,7 +68,7 @@ def compile_webmap(
         map_imgs_path=map_imgs_path,
         exceptions=exceptions,
         rechecks=rechecks,
-        project=project,
+        projects=projects,
         add_extra=add_extra,
     )
 

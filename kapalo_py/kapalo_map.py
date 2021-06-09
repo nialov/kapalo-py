@@ -116,13 +116,6 @@ def gather_observation_data(
     """
     Get data for observations.
     """
-    # grouped_tectonic = kapalo_tables.tectonic_measurements.groupby(Columns.OBS_ID)
-    # grouped_planar = kapalo_tables.planar_structures.groupby(Columns.TM_GID)
-    # grouped_linear = kapalo_tables.linear_structures.groupby(Columns.TM_GID)
-    # grouped_images = kapalo_tables.images.groupby(Columns.OBS_ID)
-    # grouped_rock_obs = kapalo_tables.rock_observation_points.groupby(Columns.OBS_ID)
-    # grouped_samples = kapalo_tables.samples.groupby(Columns.OBS_ID)
-
     group_tables = GroupTables(
         grouped_tectonic=kapalo_tables.tectonic_measurements.groupby(Columns.OBS_ID),
         grouped_planar=kapalo_tables.planar_structures.groupby(Columns.TM_GID),
@@ -260,7 +253,7 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
     return "".join(markdown_text_list)
 
 
-def observation_html(observation: Observation, imgs_path: Path):
+def observation_html(observation: Observation, imgs_path: Path) -> str:
     """
     Create html summary of observation.
     """
@@ -423,16 +416,16 @@ def gather_project_observations_multiple(
 
 def create_project_map(
     kapalo_tables: List[KapaloTables],
-    project: str,
+    projects: List[str],
     imgs_path: Path,
     exceptions: Dict[str, str],
     rechecks: List[str],
-):
+) -> folium.Map:
     """
     Create folium map for project observations.
     """
     all_observations, all_project_tables = gather_project_observations_multiple(
-        kapalo_tables, project, exceptions=exceptions
+        kapalo_tables, projects=projects, exceptions=exceptions
     )
 
     # Initialize map and center it on the observations
@@ -490,7 +483,7 @@ def webmap_compilation(
     map_imgs_path: Path,
     exceptions: Dict[str, str],
     rechecks: List[str],
-    project: str,
+    projects: List[str],
     add_extra: bool,
 ):
     """
@@ -504,7 +497,7 @@ def webmap_compilation(
     # Create the folium map
     project_map = create_project_map(
         kapalo_tables,
-        project=project,
+        projects=projects,
         imgs_path=imgs_path,
         exceptions=exceptions,
         rechecks=rechecks,

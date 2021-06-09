@@ -3,6 +3,11 @@ Tests for kapalo-py.
 """
 
 from functools import lru_cache
+import pytest
+from pathlib import Path
+import pandas as pd
+from kapalo_py.schema_inference import Columns
+from itertools import cycle
 
 SIMPLE_HTML_FOR_MATCHING = """
 
@@ -23,3 +28,51 @@ def test_add_local_stylesheet_params():
     Params for test_add_local_stylesheet.
     """
     return [SIMPLE_HTML_FOR_MATCHING]
+
+
+@lru_cache(maxsize=None)
+def test_read_kapalo_tables_params():
+    """
+    Params for test_read_kapalo_tables.
+    """
+    return [Path("tests/sample_data/kapalo_sql")]
+
+
+@lru_cache(maxsize=None)
+def test_gather_observation_data_params():
+    """
+    Params for test_gather_observation_data.
+    """
+    return [(Path("tests/sample_data/kapalo_sql"), dict())]
+
+
+@lru_cache(maxsize=None)
+def test_location_centroid_params():
+    """
+    Params for test_location_centroid.
+    """
+    return [pd.DataFrame({Columns.LATITUDE: [1, 2, 3], Columns.LONGITUDE: [1, 2, 3]})]
+
+
+@lru_cache(maxsize=None)
+def test_dataframe_to_markdown_params():
+    """
+    Params for dataframe_to_markdown.
+    """
+    return [pd.DataFrame({Columns.LATITUDE: [1, 2, 3], Columns.LONGITUDE: [1, 2, 3]})]
+
+
+
+def test_observation_image_markdown_params():
+    """
+    Params for test_observation_image_markdown.
+    """
+    return test_read_kapalo_tables_params()
+
+@lru_cache(maxsize=None)
+def test_gather_project_observations_params():
+    """
+    Params for test_gather_project_observations.
+    """
+    paths = test_read_kapalo_tables_params()
+    return list(zip(paths, cycle([["Kurikka GTK"]])))
