@@ -489,7 +489,6 @@ def webmap_compilation(
     kapalo_sqlite_path: Path,
     kapalo_imgs_path: Path,
     map_save_path: Path,
-    map_imgs_path: Path,
     exceptions: Dict[str, str],
     rechecks: List[str],
     projects: List[str],
@@ -555,11 +554,11 @@ def webmap_compilation(
 
     map_save_path.write_text(styled_html)
 
-    # Remove old
-    rmtree(map_imgs_path)
+    # # Remove old
+    # rmtree(map_imgs_path)
 
-    # Copy over images
-    copytree(kapalo_imgs_path, map_imgs_path)
+    # # Copy over images
+    # copytree(kapalo_imgs_path, map_imgs_path)
 
     # Copy css
     path_copy(stylesheet, map_save_path.parent / "styles.css")
