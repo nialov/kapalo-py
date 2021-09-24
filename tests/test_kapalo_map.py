@@ -22,7 +22,7 @@ def test_add_local_stylesheet(html_str, style_path):
     assert style_path.exists()
     assert "style" in html_str
     assert isinstance(html_str, str)
-    result = kapalo_map.add_local_stylesheet(html_str, local_stylesheet=style_path)
+    result = kapalo_map.add_local_stylesheet(html_str, stylesheet=style_path)
 
     assert isinstance(result, str)
     assert style_path.name in result
@@ -108,7 +108,9 @@ def test_observation_html(fix_observations, fix_images):
     observations = fix_observations
 
     for observation in observations:
-        result = kapalo_map.observation_html(observation, fix_images)
+        result = kapalo_map.observation_html(
+            observation, fix_images, stylesheet=tests.STYLE_PATH
+        )
 
         assert isinstance(result, str)
         assert len(result) > 0
@@ -138,7 +140,7 @@ def test_observation_marker(fix_observations, fix_images):
     """
     for observation in fix_observations:
         result = kapalo_map.observation_marker(
-            observation, imgs_path=fix_images, rechecks=[]
+            observation, imgs_path=fix_images, rechecks=[], stylesheet=tests.STYLE_PATH
         )
         assert isinstance(result, folium.Marker)
 
@@ -173,5 +175,6 @@ def test_create_project_map(path, projects, fix_images):
         exceptions=dict(),
         imgs_path=fix_images,
         rechecks=[],
+        stylesheet=tests.STYLE_PATH,
     )
     assert isinstance(result, folium.Map)

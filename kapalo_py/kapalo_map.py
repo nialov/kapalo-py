@@ -18,6 +18,7 @@ from folium.plugins import locate_control
 from kapalo_py.observation_data import Observation, create_observation
 from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
+# Remove static paths
 KURIKKA_LINEAMENTS = Path("data/kurikka.geojson")
 KURIKKA_BEDROCK = Path("data/kurikka_bedrock.geojson")
 
@@ -308,8 +309,8 @@ def add_local_stylesheet(html: str, stylesheet: Path):
     Add local stylesheet reference to html.
     """
     assert "style" in html
-    if not local_stylesheet.exists():
-        raise FileNotFoundError(f"Expected {local_stylesheet} to exist.")
+    if not stylesheet.exists():
+        raise FileNotFoundError(f"Expected {stylesheet} to exist.")
 
     # compiled_re = re.compile(r"\s*<style>html")
 
@@ -324,7 +325,7 @@ def add_local_stylesheet(html: str, stylesheet: Path):
 
     matched_line_idx = max(matched_line_idxs) + 1
 
-    reference = f"""    <link rel="stylesheet" href="{local_stylesheet.name}"/>"""
+    reference = f"""    <link rel="stylesheet" href="{stylesheet.name}"/>"""
 
     split_html.insert(matched_line_idx, reference)
 
@@ -351,7 +352,7 @@ def gather_project_observations(
 
 
 def observation_marker(
-    observation: Observation, imgs_path: Path, rechecks: List[str]
+    observation: Observation, imgs_path: Path, rechecks: List[str], stylesheet: Path
 ) -> folium.Marker:
     """
     Make observation marker.
@@ -384,7 +385,9 @@ def observation_marker(
     marker = folium.Marker(
         location=[observation.latitude, observation.longitude],
         popup=folium.Popup(
-            observation_html(observation=observation, imgs_path=imgs_path),
+            observation_html(
+                observation=observation, imgs_path=imgs_path, stylesheet=stylesheet
+            ),
             parse_html=False,
         ),
         icon=folium.Icon(**icon_properties),
@@ -422,6 +425,7 @@ def create_project_map(
     imgs_path: Path,
     exceptions: Dict[str, str],
     rechecks: List[str],
+    stylesheet: Path,
 ) -> folium.Map:
     """
     Create folium map for project observations.
@@ -451,7 +455,10 @@ def create_project_map(
         observation_id_set.add(obs_id)
 
         marker = observation_marker(
-            observation=observation, imgs_path=imgs_path, rechecks=rechecks
+            observation=observation,
+            imgs_path=imgs_path,
+            rechecks=rechecks,
+            stylesheet=stylesheet,
         )
         marker.add_to(folium_map)
     return folium_map
@@ -504,6 +511,7 @@ def webmap_compilation(
         imgs_path=imgs_path,
         exceptions=exceptions,
         rechecks=rechecks,
+        stylesheet=stylesheet,
     )
 
     if KURIKKA_LINEAMENTS.exists() and add_extra:
