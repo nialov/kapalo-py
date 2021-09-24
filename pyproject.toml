@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post51.dev0+d643664"
+version = "0.0.0.post54.dev0+1b58547"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"
@@ -62,8 +62,6 @@ isort = {version = "*", optional = true}
 
 # Typecheck
 mypy = {version = "*", optional = true}
-apsg = {git = "https://www.github.com/ondrolexa/apsg.git"}
-pygeos = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 nox = "*"
