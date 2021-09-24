@@ -23,7 +23,10 @@ SQL_DIR = "kapalo_sql"
 
 DATA_SQL_DIR_PATH = f"data/{SQL_DIR}"
 DATA_IMGS_DIR_PATH = f"data/{IMGS_DIR}"
-LOCAL_STYLESHEET = "data/styles.css"
+# styles.css is included with pyproject.toml
+LOCAL_STYLESHEET = f"{Path(__file__).parent.parent.resolve()}/styles.css"
+INDEX_HTML = "index.html"
+MAPCONFIG = "mapconfig.ini"
 
 
 def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
@@ -61,8 +64,8 @@ def compile_webmap(
         exists=True,
         dir_okay=True,
     ),
-    map_save_path: Path = typer.Option(default=Path("index.html"), dir_okay=False),
-    config_path: Path = typer.Option(default=Path("mapconfig.ini")),
+    map_save_path: Path = typer.Option(default=Path(INDEX_HTML), dir_okay=False),
+    config_path: Path = typer.Option(default=Path(MAPCONFIG)),
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     add_extra: bool = typer.Option(default=True),
     stylesheet: Path = typer.Option(LOCAL_STYLESHEET, exists=True, dir_okay=False),
@@ -96,7 +99,7 @@ def export_observations(
         exists=True,
         dir_okay=True,
     ),
-    config_path: Path = typer.Option(default="mapconfig.ini"),
+    config_path: Path = typer.Option(default=MAPCONFIG),
 ):
     """
     Export kapalo tables.

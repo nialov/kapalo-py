@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post44.dev0+4055b69"
+version = "0.0.0.post51.dev0+d643664"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"
@@ -18,7 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: GIS"
 ]
-include = ["CHANGELOG.md"]
+include = ["CHANGELOG.md", "styles.css"]
 
 [tool.poetry.scripts]
 kapalo-py = "kapalo_py.cli:app"

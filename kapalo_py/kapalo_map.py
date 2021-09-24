@@ -560,5 +560,5 @@ def webmap_compilation(
     # # Copy over images
     # copytree(kapalo_imgs_path, map_imgs_path)
 
-    # Copy css
+    # Copy css to local map project
     path_copy(stylesheet, map_save_path.parent / "styles.css")
