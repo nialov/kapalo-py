@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import typer
+from PIL import Image
 
 import kapalo_py.export as export
 import kapalo_py.kapalo_map as kapalo_map
@@ -112,3 +113,43 @@ def export_observations(
 
         assert dataframe_path.exists()
         assert geodataframe_path.exists()
+
+
+def _resize_images(
+    origin_dir: Path,
+    destination_dir: Path,
+    fixed_width: int,
+    extension: str,
+):
+    """
+    Resize images from origin_dir to destination_dir.
+    """
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    for image_path in origin_dir.glob(f"*.{extension}"):
+        new_path = destination_dir / image_path.name
+
+        # From: https://www.holisticseo.digital/python-seo/resize-image/
+        image = Image.open(image_path)
+        width_percent = fixed_width / float(image.size[0])
+        height_size = int((float(image.size[1]) * float(width_percent)))
+        image = image.resize((fixed_width, height_size), Image.NEAREST)
+        image.save(new_path)
+
+
+@app.command()
+def resize_images(
+    origin_dir: Path = typer.Argument(..., exists=True, dir_okay=True, file_okay=False),
+    destination_dir: Path = typer.Argument(...),
+    fixed_width: int = typer.Option(800),
+    extension: str = typer.Option("jpg"),
+):
+    """
+    Resize images from origin_dir to destination_dir.
+    """
+    _resize_images(
+        origin_dir=origin_dir,
+        destination_dir=destination_dir,
+        fixed_width=fixed_width,
+        extension=extension,
+    )
+
