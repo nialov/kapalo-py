@@ -562,4 +562,4 @@ def webmap_compilation(
     copytree(kapalo_imgs_path, map_imgs_path)
 
     # Copy css
-    path_copy(stylesheet, map_save_path / "styles.css")
+    path_copy(stylesheet, map_save_path.parent / "styles.css")
