@@ -5,7 +5,7 @@ authors:
 - family-names: Ovaskainen
   given-names: Nikolas
 title: kapalo_py
-version: "0.0.0"
+version: "0.0.0.post42.dev0+1f24e03"
 date-released: "2021-01-01"
 keywords:
   - python

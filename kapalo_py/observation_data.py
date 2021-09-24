@@ -47,7 +47,7 @@ def get_group_data(
     try:
         group: pd.DataFrame = grouped.get_group(group_name)
     except KeyError:
-        logging.info("No data for {}.".format(group_name))
+        logging.info(f"No data for {group_name}.")
         return pd.DataFrame(columns=columns)
 
     for col in columns:

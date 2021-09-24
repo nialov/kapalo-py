@@ -1,9 +1,11 @@
 """
 Global pytest fixtures.
 """
-import pytest
 from pathlib import Path
-import kapalo_py.kapalo_map as kapalo_map
+
+import pytest
+
+from kapalo_py import kapalo_map
 
 
 @pytest.fixture

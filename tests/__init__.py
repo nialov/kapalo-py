@@ -3,11 +3,13 @@ Tests for kapalo-py.
 """
 
 from functools import lru_cache
-import pytest
-from pathlib import Path
-import pandas as pd
-from kapalo_py.schema_inference import Columns
 from itertools import cycle
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from kapalo_py.schema_inference import Columns
 
 SIMPLE_HTML_FOR_MATCHING = """
 
@@ -23,6 +25,8 @@ SIMPLE_HTML_FOR_MATCHING = """
 
 ORIGIN_IMG_DIR_PATH = Path("tests/sample_data/origin_imgs")
 JPG = "jpg"
+
+STYLE_PATH = Path("tests/sample_data/styles.css")
 
 
 @lru_cache(maxsize=None)

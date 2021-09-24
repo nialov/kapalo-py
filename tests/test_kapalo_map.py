@@ -4,21 +4,22 @@ Tests for kapalo_map.py.
 
 from pathlib import Path
 
+import folium
 import pytest
 
-import kapalo_py.kapalo_map as kapalo_map
-from kapalo_py.schema_inference import KapaloTables
-from kapalo_py.observation_data import Observation
+from kapalo_py import kapalo_map
 import tests
-import folium
+from kapalo_py.observation_data import Observation
+from kapalo_py.schema_inference import KapaloTables
 
 
+@pytest.mark.parametrize("style_path", [tests.STYLE_PATH])
 @pytest.mark.parametrize("html_str", tests.test_add_local_stylesheet_params())
-def test_add_local_stylesheet(html_str):
+def test_add_local_stylesheet(html_str, style_path):
     """
     Test add_local_stylesheet.
     """
-    style_path = Path("data/styles.css")
+    assert style_path.exists()
     assert "style" in html_str
     assert isinstance(html_str, str)
     result = kapalo_map.add_local_stylesheet(html_str, local_stylesheet=style_path)
@@ -66,7 +67,7 @@ def test_location_centroid(observations):
     """
     result = kapalo_map.location_centroid(observations)
     assert isinstance(result, tuple)
-    assert all([isinstance(val, float) for val in result])
+    assert all(isinstance(val, float) for val in result)
 
 
 @pytest.mark.parametrize("dataframe", tests.test_dataframe_to_markdown_params())
@@ -99,6 +100,7 @@ def test_observation_image_markdown(fix_observations, fix_images):
         assert isinstance(result, str)
         assert len(result) > 0
 
+
 def test_observation_html(fix_observations, fix_images):
     """
     Test observation_html.
@@ -111,8 +113,11 @@ def test_observation_html(fix_observations, fix_images):
         assert isinstance(result, str)
         assert len(result) > 0
 
-@pytest.mark.parametrize("path,projects", tests.test_gather_project_observations_params())
-def test_gather_project_observations(path,projects):
+
+@pytest.mark.parametrize(
+    "path,projects", tests.test_gather_project_observations_params()
+)
+def test_gather_project_observations(path, projects):
     """
     Test gather_project_observations.
     """
@@ -126,30 +131,47 @@ def test_gather_project_observations(path,projects):
     assert isinstance(result[1], KapaloTables)
     assert isinstance(result[0][0], Observation)
 
+
 def test_observation_marker(fix_observations, fix_images):
     """
     Test observation_marker.
     """
     for observation in fix_observations:
-        result = kapalo_map.observation_marker(observation, imgs_path=fix_images, rechecks=[])
+        result = kapalo_map.observation_marker(
+            observation, imgs_path=fix_images, rechecks=[]
+        )
         assert isinstance(result, folium.Marker)
 
-@pytest.mark.parametrize("path,projects", tests.test_gather_project_observations_params())
+
+@pytest.mark.parametrize(
+    "path,projects", tests.test_gather_project_observations_params()
+)
 def test_gather_project_observations_multiple(path, projects):
     """
     Test gather_project_observations_multiple.
     """
     kapalo_tables = kapalo_map.read_kapalo_tables(path)
-    result = kapalo_map.gather_project_observations_multiple(all_kapalo_tables=kapalo_tables, projects=projects, exceptions=dict())
+    result = kapalo_map.gather_project_observations_multiple(
+        all_kapalo_tables=kapalo_tables, projects=projects, exceptions=dict()
+    )
     assert isinstance(result, tuple)
     assert isinstance(result[0], list)
     assert isinstance(result[1], list)
 
-@pytest.mark.parametrize("path,projects", tests.test_gather_project_observations_params())
+
+@pytest.mark.parametrize(
+    "path,projects", tests.test_gather_project_observations_params()
+)
 def test_create_project_map(path, projects, fix_images):
     """
     Test create_project_map.
     """
     kapalo_tables = kapalo_map.read_kapalo_tables(path)
-    result = kapalo_map.create_project_map(kapalo_tables=kapalo_tables, projects=projects, exceptions=dict(), imgs_path=fix_images, rechecks=[])
+    result = kapalo_map.create_project_map(
+        kapalo_tables=kapalo_tables,
+        projects=projects,
+        exceptions=dict(),
+        imgs_path=fix_images,
+        rechecks=[],
+    )
     assert isinstance(result, folium.Map)

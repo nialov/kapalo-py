@@ -1,8 +1,9 @@
 """
 Tests for cli entrypoints.
 """
-import tests
 import pytest
+
+import tests
 from kapalo_py import cli
 
 

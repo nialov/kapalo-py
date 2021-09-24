@@ -226,7 +226,7 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
 
         # Report no matches
         if sum(matches) != 1:
-            logging.error("No match for image id {} in {}".format(image_id, imgs_path))
+            logging.error(f"No match for image id {image_id} in {imgs_path}")
             return "\n"
 
         # Only one match exists, compress img_paths to that match path
@@ -444,7 +444,7 @@ def create_project_map(
     for observation in chain(*all_observations):
         obs_id = observation.obs_id
         if obs_id in observation_id_set:
-            logging.error("Duplicate obs_id for {}. Skipping.".format(obs_id))
+            logging.error(f"Duplicate obs_id for {obs_id}. Skipping.")
             continue
         observation_id_set.add(obs_id)
 
