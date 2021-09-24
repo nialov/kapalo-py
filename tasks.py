@@ -11,8 +11,8 @@ from invoke import UnexpectedExit, task
 NOX_PARALLEL_SESSIONS = ("tests_pip",)
 
 PACKAGE_NAME = "kapalo_py"
-kapalo_imgs_dir = Path("data/kapalo_imgs")
-kapalo_imgs_orig_dir = Path("data/kapalo_imgs_orig")
+KAPALO_IMGS_DIR = Path("data/kapalo_imgs")
+KAPALO_IMGS_ORIG_DIR = Path("data/kapalo_imgs_orig")
 
 
 @task
@@ -114,7 +114,7 @@ def make(_):
 
 @task
 def image_convert(
-    c, orig_img_dir=str(kapalo_imgs_orig_dir), converted_img_dir=str(kapalo_imgs_dir)
+    c, orig_img_dir=str(KAPALO_IMGS_ORIG_DIR), converted_img_dir=str(KAPALO_IMGS_DIR)
 ):
     """
     Convert kapalo images to smaller size.
@@ -142,7 +142,7 @@ def kapalo_update(c):
 
     # Make dirs
     kapalo_sql_dir = Path("data/kapalo_sql")
-    for kapalo_dir in (kapalo_sql_dir, kapalo_imgs_dir, kapalo_imgs_orig_dir):
+    for kapalo_dir in (kapalo_sql_dir, KAPALO_IMGS_DIR, KAPALO_IMGS_ORIG_DIR):
         kapalo_dir.mkdir(exist_ok=True, parents=True)
 
     # Remove old backup
