@@ -18,6 +18,12 @@ RECHECK = "recheck"
 RCLONE = "rclone"
 SYNC = "sync"
 
+IMGS_DIR = "kapalo_imgs"
+SQL_DIR = "kapalo_sql"
+
+DATA_SQL_DIR_PATH = f"data/{SQL_DIR}"
+DATA_IMGS_DIR_PATH = f"data/{IMGS_DIR}"
+
 
 def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
     """
@@ -44,18 +50,18 @@ def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
 @app.command()
 def compile_webmap(
     kapalo_sqlite_path: Path = typer.Option(
-        default=Path("data/kapalo_sql/"),
+        default=DATA_SQL_DIR_PATH,
         exists=True,
         dir_okay=True,
         file_okay=False,
     ),
     kapalo_imgs_path: Path = typer.Option(
-        default=Path("data/kapalo_imgs/"),
+        default=Path(DATA_IMGS_DIR_PATH),
         exists=True,
         dir_okay=True,
     ),
-    map_save_path: Path = typer.Option(default=Path("live-mapping/index.html")),
-    map_imgs_path: Path = typer.Option(default=Path("live-mapping/kapalo_imgs")),
+    map_save_path: Path = typer.Option(default=Path("index.html")),
+    map_imgs_path: Path = typer.Option(default=Path("kapalo_imgs")),
     config_path: Path = typer.Option(default=Path("mapconfig.ini")),
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     add_extra: bool = typer.Option(default=True),
@@ -80,7 +86,7 @@ def compile_webmap(
 def export_observations(
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     kapalo_sqlite_path: Path = typer.Option(
-        default="data/kapalo_sql/",
+        default=DATA_SQL_DIR_PATH,
         exists=True,
         file_okay=False,
     ),
@@ -161,8 +167,8 @@ def remote_update(
     drive: str = typer.Option("nialovdrive"),
     remote_sql_dir: str = typer.Option("kapalo/kapalo_sql"),
     remote_images_dir: str = typer.Option("kapalo/kapalo_imgs"),
-    local_sql_dir: Path = typer.Option("data/kapalo_sql"),
-    local_images_dir: Path = typer.Option("data/kapalo_imgs_orig"),
+    local_sql_dir: Path = typer.Option(DATA_SQL_DIR_PATH),
+    local_images_dir: Path = typer.Option(DATA_IMGS_DIR_PATH),
 ):
     """
     Update kapalo data remotely with rclone.
