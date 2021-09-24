@@ -18,8 +18,8 @@ from folium.plugins import locate_control
 from kapalo_py.observation_data import Observation, create_observation
 from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
-kurikka_lineaments = Path("data/kurikka.geojson")
-kurikka_bedrock = Path("data/kurikka_bedrock.geojson")
+KURIKKA_LINEAMENTS = Path("data/kurikka.geojson")
+KURIKKA_BEDROCK = Path("data/kurikka_bedrock.geojson")
 
 
 def path_copy(src: Path, dest: Path):
@@ -253,7 +253,9 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
     return "".join(markdown_text_list)
 
 
-def observation_html(observation: Observation, imgs_path: Path) -> str:
+def observation_html(
+    observation: Observation, imgs_path: Path, stylesheet: Path
+) -> str:
     """
     Create html summary of observation.
     """
@@ -301,7 +303,7 @@ def observation_html(observation: Observation, imgs_path: Path) -> str:
     return html
 
 
-def add_local_stylesheet(html: str, local_stylesheet: Path = Path("data/styles.css")):
+def add_local_stylesheet(html: str, stylesheet: Path):
     """
     Add local stylesheet reference to html.
     """
@@ -485,6 +487,7 @@ def webmap_compilation(
     rechecks: List[str],
     projects: List[str],
     add_extra: bool,
+    stylesheet: Path,
 ):
     """
     Compile the web map.
@@ -503,7 +506,7 @@ def webmap_compilation(
         rechecks=rechecks,
     )
 
-    if kurikka_lineaments.exists() and add_extra:
+    if KURIKKA_LINEAMENTS.exists() and add_extra:
         # Add lineaments
         folium.GeoJson(
             data="data/kurikka.geojson",
@@ -513,7 +516,7 @@ def webmap_compilation(
 
     # rock_names = gpd.read_file("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
 
-    if kurikka_bedrock.exists() and add_extra:
+    if KURIKKA_BEDROCK.exists() and add_extra:
         # Add bedrock
         folium.GeoJson(
             data="data/kurikka_bedrock.geojson",
@@ -538,7 +541,9 @@ def webmap_compilation(
         str(kapalo_imgs_path), kapalo_imgs_path.name
     )
 
-    styled_html = add_local_stylesheet(html=replaced_img_paths_html)
+    styled_html = add_local_stylesheet(
+        html=replaced_img_paths_html, stylesheet=stylesheet
+    )
 
     map_save_path.write_text(styled_html)
 
@@ -549,4 +554,4 @@ def webmap_compilation(
     copytree(kapalo_imgs_path, map_imgs_path)
 
     # Copy css
-    path_copy(Path("data/styles.css"), Path("live-mapping/styles.css"))
+    path_copy(stylesheet, map_save_path / "styles.css")

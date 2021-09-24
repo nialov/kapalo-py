@@ -23,6 +23,7 @@ SQL_DIR = "kapalo_sql"
 
 DATA_SQL_DIR_PATH = f"data/{SQL_DIR}"
 DATA_IMGS_DIR_PATH = f"data/{IMGS_DIR}"
+LOCAL_STYLESHEET = "data/styles.css"
 
 
 def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
@@ -65,6 +66,7 @@ def compile_webmap(
     config_path: Path = typer.Option(default=Path("mapconfig.ini")),
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     add_extra: bool = typer.Option(default=True),
+    stylesheet: Path = typer.Option(LOCAL_STYLESHEET, exists=True, dir_okay=False),
 ):
     """
     Compile live-mapping website.
@@ -79,6 +81,7 @@ def compile_webmap(
         rechecks=rechecks,
         projects=projects,
         add_extra=add_extra,
+        stylesheet=stylesheet,
     )
 
 
@@ -146,8 +149,10 @@ def _resize_images(
 
 @app.command()
 def resize_images(
-    origin_dir: Path = typer.Argument(..., exists=True, dir_okay=True, file_okay=False),
-    destination_dir: Path = typer.Argument(...),
+    origin_dir: Path = typer.Argument(
+        DATA_IMGS_DIR_PATH, exists=True, dir_okay=True, file_okay=False
+    ),
+    destination_dir: Path = typer.Argument(IMGS_DIR),
     fixed_width: int = typer.Option(800),
     extension: str = typer.Option("jpg"),
 ):
