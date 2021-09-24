@@ -9,8 +9,7 @@ from typing import Dict, List, Tuple
 import typer
 from PIL import Image
 
-from kapalo_py import export
-from kapalo_py import kapalo_map
+from kapalo_py import export, kapalo_map
 
 app = typer.Typer()
 

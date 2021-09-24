@@ -7,8 +7,8 @@ from pathlib import Path
 import folium
 import pytest
 
-from kapalo_py import kapalo_map
 import tests
+from kapalo_py import kapalo_map
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import KapaloTables
 

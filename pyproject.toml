@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post42.dev0+1f24e03"
+version = "0.0.0.post44.dev0+4055b69"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"
@@ -21,7 +21,7 @@ classifiers = [
 include = ["CHANGELOG.md"]
 
 [tool.poetry.scripts]
-kapalopy = "kapalo_py.cli:app"
+kapalo-py = "kapalo_py.cli:app"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10.0"

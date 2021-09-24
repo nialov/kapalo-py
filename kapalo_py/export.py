@@ -10,8 +10,7 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
 
-from kapalo_py import kapalo_map
-from kapalo_py import utils
+from kapalo_py import kapalo_map, utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import Columns
 
