@@ -12,11 +12,10 @@ dev/
 index.html
 live-mapping
 piirros.png
-tests/sample_data/kapalo_sql
 tests/sample_data/kapalo_imgs
 tests/sample_data/kapalo_imgs_orig
-*.sqlite
 *.jpg
+data
 exports
 data/kapalo_imgs
 data/kapalo_imgs_orig
