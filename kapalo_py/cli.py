@@ -4,6 +4,7 @@ Command line integration.
 import configparser
 from pathlib import Path
 from typing import Dict, List, Tuple
+import subprocess
 
 import typer
 from PIL import Image
@@ -15,6 +16,8 @@ app = typer.Typer()
 
 EXCEPTIONS = "exceptions"
 RECHECK = "recheck"
+RCLONE = "rclone"
+SYNC = "sync"
 
 
 def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
@@ -153,3 +156,33 @@ def resize_images(
         extension=extension,
     )
 
+
+@app.command()
+def remote_update(
+    drive: str = typer.Option("nialovdrive"),
+    remote_sql_dir: str = typer.Option("kapalo/kapalo_sql"),
+    remote_images_dir: str = typer.Option("kapalo/kapalo_imgs"),
+    local_sql_dir: Path = typer.Option("data/kapalo_sql"),
+    local_images_dir: Path = typer.Option("data/kapalo_imgs_orig"),
+):
+    """
+    Update kapalo data remotely with rclone.
+    """
+    try:
+        subprocess.check_call(["rclone", "--help"])
+    except subprocess.CalledProcessError:
+        typer.secho(
+            "Expected rclone to be executable on system to allow remote sync.", fg="red"
+        )
+        raise
+
+    for remote, local in zip(
+        (remote_sql_dir, remote_images_dir),
+        (local_sql_dir, local_images_dir),
+    ):
+        local.mkdir(parents=True, exist_ok=True)
+
+        cmd = (RCLONE, SYNC, f"{drive}:{remote}", str(local))
+        typer.secho(f"Calling cmd: {cmd}", fg="blue")
+        subprocess.check_call(cmd)
+        typer.secho("Completed command!", fg="green")
