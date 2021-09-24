@@ -180,7 +180,7 @@ def remote_update(
     Update kapalo data remotely with rclone.
     """
     try:
-        subprocess.check_call(["rclone", "--help"])
+        subprocess.check_call(["rclone", "--help"], stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         typer.secho(
             "Expected rclone to be executable on system to allow remote sync.", fg="red"
