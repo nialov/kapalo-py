@@ -62,6 +62,8 @@ isort = {version = "*", optional = true}
 
 # Typecheck
 mypy = {version = "*", optional = true}
+apsg = {git = "https://www.github.com/ondrolexa/apsg.git"}
+pygeos = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 nox = "*"
