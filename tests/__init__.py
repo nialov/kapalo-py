@@ -21,6 +21,9 @@ SIMPLE_HTML_FOR_MATCHING = """
     <link rel="stylesheet" href.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
 """
 
+ORIGIN_IMG_DIR_PATH = Path("tests/sample_data/origin_imgs")
+JPG = "jpg"
+
 
 @lru_cache(maxsize=None)
 def test_add_local_stylesheet_params():
@@ -62,12 +65,12 @@ def test_dataframe_to_markdown_params():
     return [pd.DataFrame({Columns.LATITUDE: [1, 2, 3], Columns.LONGITUDE: [1, 2, 3]})]
 
 
-
 def test_observation_image_markdown_params():
     """
     Params for test_observation_image_markdown.
     """
     return test_read_kapalo_tables_params()
+
 
 @lru_cache(maxsize=None)
 def test_gather_project_observations_params():
@@ -76,3 +79,13 @@ def test_gather_project_observations_params():
     """
     paths = test_read_kapalo_tables_params()
     return list(zip(paths, cycle([["Kurikka GTK"]])))
+
+
+@lru_cache(maxsize=None)
+def test__resize_images_params():
+    """
+    Params for test__resize_images.
+    """
+    return [
+        (ORIGIN_IMG_DIR_PATH, JPG),
+    ]
