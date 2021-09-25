@@ -13,8 +13,10 @@ def test__resize_images(origin_dir, extension, fixed_width, tmp_path):
     """
     Test _resize_images.
     """
+    assert origin_dir.exists()
     origin_dir_files = list(origin_dir.glob(f"*.{extension}"))
     origin_dir_filecount = len(origin_dir_files)
+    assert origin_dir_filecount > 0
     destination_dir = tmp_path / "destination_dir"
     cli._resize_images(
         origin_dir=origin_dir,
