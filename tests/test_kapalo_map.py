@@ -3,6 +3,7 @@ Tests for kapalo_map.py.
 """
 
 from pathlib import Path
+from typing import Callable, List
 
 import folium
 import pytest
@@ -215,15 +216,15 @@ params = (
     tests.test_webmap_compilation_params(),
 )
 def test_webmap_compilation(
-    sqlite_path,
-    imgs_path,
-    projects,
-    extra_datasets,
-    extra_names,
-    extra_popup_fields,
-    extra_style_functions,
-    extra_colors,
-    tmp_path,
+    sqlite_path: Path,
+    imgs_path: Path,
+    projects: List[str],
+    extra_datasets: List[Path],
+    extra_names: List[str],
+    extra_popup_fields: List[str],
+    extra_style_functions: List[Callable],
+    extra_colors: List[str],
+    tmp_path: Path,
 ):
     """
     Test webmap_compilation.
