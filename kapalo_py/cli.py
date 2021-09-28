@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple
 import typer
 from PIL import Image
 
-from kapalo_py import export, kapalo_map
+from kapalo_py import export, kapalo_map, utils
 
 app = typer.Typer()
 
@@ -67,8 +67,25 @@ def compile_webmap(
     map_save_path: Path = typer.Option(default=Path(INDEX_HTML), dir_okay=False),
     config_path: Path = typer.Option(default=Path(MAPCONFIG)),
     projects: List[str] = typer.Option(["Kurikka GTK"]),
-    add_extra: bool = typer.Option(default=True),
     stylesheet: Path = typer.Option(LOCAL_STYLESHEET, exists=True, dir_okay=False),
+    extra_datasets: List[Path] = typer.Option(
+        [],
+        exists=True,
+        help=(
+            "Extra geodatasets to add to map."
+            " Can give multiple but note that the other extra_* arguments must"
+            " be given in same order."
+        ),
+        dir_okay=False,
+    ),
+    extra_names: List[str] = typer.Option([], help="Names for extra geodatasets."),
+    extra_popup_fields: List[str] = typer.Option(
+        [], help="Field in each geodataset to show in map popup."
+    ),
+    extra_style_functions: List[utils.StyleFunctionEnum] = typer.Option(
+        [],
+        help="Choose function to visualize each geodataset or leave empty for default.",
+    ),
 ):
     """
     Compile live-mapping website.
@@ -81,7 +98,10 @@ def compile_webmap(
         exceptions=exceptions,
         rechecks=rechecks,
         projects=projects,
-        add_extra=add_extra,
+        extra_datasets=extra_datasets,
+        extra_names=extra_names,
+        extra_popup_fields=extra_popup_fields,
+        extra_style_functions=extra_style_functions,
         stylesheet=stylesheet,
     )
 

@@ -5,16 +5,18 @@ Making spatial maps.
 import logging
 import sqlite3
 from functools import lru_cache
-from itertools import chain, compress
+from itertools import chain, compress, zip_longest
 from pathlib import Path
-from shutil import copy, copytree, rmtree
-from typing import Dict, List, Sequence, Tuple
+from shutil import copy
+from typing import Callable, Dict, List, Sequence, Tuple
 
 import folium
+import geopandas as gpd
 import markdown
 import pandas as pd
 from folium.plugins import locate_control
 
+from kapalo_py import utils
 from kapalo_py.observation_data import Observation, create_observation
 from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
@@ -254,9 +256,7 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
     return "".join(markdown_text_list)
 
 
-def observation_html(
-    observation: Observation, imgs_path: Path, stylesheet: Path
-) -> str:
+def observation_html(observation: Observation, imgs_path: Path) -> str:
     """
     Create html summary of observation.
     """
@@ -352,7 +352,7 @@ def gather_project_observations(
 
 
 def observation_marker(
-    observation: Observation, imgs_path: Path, rechecks: List[str], stylesheet: Path
+    observation: Observation, imgs_path: Path, rechecks: List[str]
 ) -> folium.Marker:
     """
     Make observation marker.
@@ -385,9 +385,7 @@ def observation_marker(
     marker = folium.Marker(
         location=[observation.latitude, observation.longitude],
         popup=folium.Popup(
-            observation_html(
-                observation=observation, imgs_path=imgs_path, stylesheet=stylesheet
-            ),
+            observation_html(observation=observation, imgs_path=imgs_path),
             parse_html=False,
         ),
         icon=folium.Icon(**icon_properties),
@@ -425,7 +423,6 @@ def create_project_map(
     imgs_path: Path,
     exceptions: Dict[str, str],
     rechecks: List[str],
-    stylesheet: Path,
 ) -> folium.Map:
     """
     Create folium map for project observations.
@@ -435,6 +432,7 @@ def create_project_map(
     )
 
     # Initialize map and center it on the observations
+    # crs is EPSG3857 by default
     folium_map = folium.Map(
         location=location_centroid(
             observations=pd.concat(
@@ -458,31 +456,53 @@ def create_project_map(
             observation=observation,
             imgs_path=imgs_path,
             rechecks=rechecks,
-            stylesheet=stylesheet,
         )
         marker.add_to(folium_map)
     return folium_map
 
 
-def lineament_style(_):
+def resolve_extras_inputs(
+    extra_datasets: List[Path],
+    extra_names: List[str],
+    extra_popup_fields: List[str],
+    extra_style_functions: List[Callable[..., Dict[str, str]]],
+) -> List[utils.FoliumGeoJson]:
     """
-    Style lineament polylines.
+    Resolve extras inputs to utils.FoliumGeoJsons.
     """
-    return {
-        "color": "black",
-        "weight": "1",
-    }
+    if len(extra_datasets) == 0:
+        return []
+    # input_lengths = [
+    #     len(values)
+    #     for values in (extra_names, extra_popup_fields, extra_style_functions)
+    # ]
+    # if any(length > 0 for length in input_lengths) and input_lengths.count(
+    #     input_lengths[0]
+    # ) != len(input_lengths):
+    #     raise ValueError(
+    #         "Expected all extras to have names, popups and style_functions."
+    #     )
+    extras = []
+    for path, name, popup, style_function in zip_longest(
+        extra_datasets,
+        extra_names,
+        extra_popup_fields,
+        extra_style_functions,
+        fillvalue=None,
+    ):
 
-
-def bedrock_style(_):
-    """
-    Style bedrock polygons.
-    """
-    return {
-        "strokeColor": "blue",
-        "fillOpacity": 0.0,
-        "weight": 0.5,
-    }
+        gdf = gpd.read_file(path).to_crs("EPSG:4326")
+        assert isinstance(gdf, gpd.GeoDataFrame)
+        folium_geojson = utils.FoliumGeoJson(
+            data=gdf,
+            name=name if name is not None else path.stem,
+            popup_fields=popup,
+            style_function=style_function
+            if style_function is not None
+            else style_function,
+        )
+        extras.append(folium_geojson)
+    return extras
 
 
 def webmap_compilation(
@@ -492,12 +512,22 @@ def webmap_compilation(
     exceptions: Dict[str, str],
     rechecks: List[str],
     projects: List[str],
-    add_extra: bool,
     stylesheet: Path,
-):
+    extra_datasets: List[Path],
+    extra_names: List[str],
+    extra_popup_fields: List[str],
+    extra_style_functions: List[utils.StyleFunctionEnum],
+) -> folium.Map:
     """
     Compile the web map.
     """
+    # Resolve if extras geodatasets are added to map
+    extras = resolve_extras_inputs(
+        extra_datasets=extra_datasets,
+        extra_names=extra_names,
+        extra_popup_fields=extra_popup_fields,
+        extra_style_functions=extra_style_functions,
+    )
     kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
 
     # Path to kapalo images
@@ -510,27 +540,39 @@ def webmap_compilation(
         imgs_path=imgs_path,
         exceptions=exceptions,
         rechecks=rechecks,
-        stylesheet=stylesheet,
     )
 
-    if KURIKKA_LINEAMENTS.exists() and add_extra:
-        # Add lineaments
+    for extra in extras:
         folium.GeoJson(
-            data="data/kurikka.geojson",
-            name="Kurikka Lineaments",
-            style_function=lineament_style,
+            data=extra.data,
+            name=extra.name,
+            style_function=extra.style_function,
+            popup=(
+                folium.GeoJsonPopup(fields=extra.popup_fields)
+                if extra.popup_fields is not None and len(extra.popup_fields) > 0
+                else None
+            ),
         ).add_to(project_map)
 
-    # rock_names = gpd.read_file("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
+    #     if KURIKKA_LINEAMENTS.exists() and add_extra:
+    #         # Add lineaments
+    #         folium.GeoJson(
+    #             data="data/kurikka.geojson",
+    #             name="Kurikka Lineaments",
+    #             style_function=lineament_style,
+    #         ).add_to(project_map)
 
-    if KURIKKA_BEDROCK.exists() and add_extra:
-        # Add bedrock
-        folium.GeoJson(
-            data="data/kurikka_bedrock.geojson",
-            name="Kurikka Bedrock",
-            popup=folium.GeoJsonPopup(fields=["ROCK_NAME_"]),
-            style_function=bedrock_style,
-        ).add_to(project_map)
+    #     # rock_names = gpd.read_file
+    # ("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
+
+    #     if KURIKKA_BEDROCK.exists() and add_extra:
+    #         # Add bedrock
+    #         folium.GeoJson(
+    #             data="data/kurikka_bedrock.geojson",
+    #             name="Kurikka Bedrock",
+    #             popup=folium.GeoJsonPopup(fields=["ROCK_NAME_"]),
+    #             style_function=bedrock_style,
+    #         ).add_to(project_map)
 
     # Add user location control
     locate_control.LocateControl(
@@ -562,3 +604,5 @@ def webmap_compilation(
 
     # Copy css to local map project
     path_copy(stylesheet, map_save_path.parent / "styles.css")
+
+    return project_map
