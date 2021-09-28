@@ -177,27 +177,33 @@ def test_create_project_map(path, projects, fix_images):
     assert isinstance(result, folium.Map)
 
 
-params = "extra_datasets,extra_names,extra_popup_fields,extra_style_functions"
+params = (
+    "extra_datasets,extra_names,extra_popup_fields,"
+    "extra_style_functions,extra_colors"
+)
 
 
 @pytest.mark.parametrize(
     params,
     [
-        ([], [], [], []),
+        ([], [], [], [], []),
         (
             [Path("tests/sample_data/sample_lineaments.geojson")],
             ["Sample Lineaments"],
             [""],
             [utils.StyleFunctionEnum.LINEAMENT],
+            ["black"],
         ),
         (
             [Path("tests/sample_data/sample_lineaments.geojson")] * 2,
             ["Sample Lineaments"] * 2,
             [],
-            [utils.StyleFunctionEnum.LINEAMENT] * 2,
+            [],
+            ["black"] * 2,
         ),
         (
             [Path("tests/sample_data/sample_lineaments.geojson")],
+            [],
             [],
             [],
             [],
@@ -216,6 +222,7 @@ def test_webmap_compilation(
     extra_names,
     extra_popup_fields,
     extra_style_functions,
+    extra_colors,
     tmp_path,
 ):
     """
@@ -240,6 +247,7 @@ def test_webmap_compilation(
         extra_names=extra_names,
         extra_popup_fields=extra_popup_fields,
         extra_style_functions=extra_style_functions,
+        extra_colors=extra_colors,
         projects=projects,
         map_save_path=map_save_path,
     )
