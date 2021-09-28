@@ -70,6 +70,7 @@ jupyterlab = "*"
 ipython = "*"
 pytest = "*"
 pre-commit = "*"
+bpython = "^0.21"
 
 [tool.poetry.extras]
 coverage = ["coverage", "coverage-badge"]
