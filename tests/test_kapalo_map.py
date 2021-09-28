@@ -191,15 +191,15 @@ params = (
             [Path("tests/sample_data/sample_lineaments.geojson")],
             ["Sample Lineaments"],
             [""],
-            [utils.StyleFunctionEnum.LINEAMENT],
+            [utils.lineament_style],
             ["black"],
         ),
         (
             [Path("tests/sample_data/sample_lineaments.geojson")] * 2,
             ["Sample Lineaments"] * 2,
             [],
-            [],
-            ["black"] * 2,
+            [utils.lineament_style] * 2,
+            ["white"] * 2,
         ),
         (
             [Path("tests/sample_data/sample_lineaments.geojson")],
@@ -228,6 +228,7 @@ def test_webmap_compilation(
     """
     Test webmap_compilation.
     """
+    assert all(callable(func) for func in extra_style_functions)
     for extra_input in (
         extra_datasets,
         extra_names,
