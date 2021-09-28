@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2021-09-24)
+## Unreleased (2021-09-28)
 
 #### New Features
 
@@ -9,6 +9,8 @@
 -   (cli): implement image resize
 
 #### Fixes
+
+-   rm data
 
 -   rm deprecated & update dependencies
 
