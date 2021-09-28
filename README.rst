@@ -68,11 +68,11 @@ License
 
 Copyright © 2021, Nikolas Ovaskainen.
 
-.. |Documentation Status| image:: https://readthedocs.org/projects/kapalo_py/badge/?version=latest
-   :target: https://kapalo_py.readthedocs.io/en/latest/?badge=latest
-.. |PyPI Status| image:: https://img.shields.io/pypi/v/kapalo_py.svg
-   :target: https://pypi.python.org/pypi/kapalo_py
-.. |CI Test| image:: https://github.com/nialov/kapalo_py/workflows/test-and-publish/badge.svg
-   :target: https://github.com/nialov/kapalo_py/actions/workflows/test-and-publish.yaml?query=branch%3Amaster
-.. |Coverage| image:: https://raw.githubusercontent.com/nialov/kapalo_py/master/docs_src/imgs/coverage.svg
-   :target: https://github.com/nialov/kapalo_py/blob/master/docs_src/imgs/coverage.svg
+.. |Documentation Status| image:: https://readthedocs.org/projects/kapalo-py/badge/?version=latest
+   :target: https://kapalo-py.readthedocs.io/en/latest/?badge=latest
+.. |PyPI Status| image:: https://img.shields.io/pypi/v/kapalo-py.svg
+   :target: https://pypi.python.org/pypi/kapalo-py
+.. |CI Test| image:: https://github.com/nialov/kapalo-py/workflows/test-and-publish/badge.svg
+   :target: https://github.com/nialov/kapalo-py/actions/workflows/test-and-publish.yaml?query=branch%3Amaster
+.. |Coverage| image:: https://raw.githubusercontent.com/nialov/kapalo-py/master/docs_src/imgs/coverage.svg
+   :target: https://github.com/nialov/kapalo-py/blob/master/docs_src/imgs/coverage.svg
