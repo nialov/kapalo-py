@@ -429,7 +429,8 @@ def changelog(session):
 
     # Add empty lines after each line of changelog
     new_lines = []
-    for line in changelog_path.read_text().splitlines():
+    for line in changelog_path.read_text("utf-8").splitlines():
+
         new_lines.append(line)
         new_lines.append("")
 
