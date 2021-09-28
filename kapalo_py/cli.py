@@ -105,7 +105,10 @@ def compile_webmap(
         extra_datasets=extra_datasets,
         extra_names=extra_names,
         extra_popup_fields=extra_popup_fields,
-        extra_style_functions=extra_style_functions,
+        extra_style_functions=[
+            utils.StyleFunctionEnum.style_function(enum)
+            for enum in extra_style_functions
+        ],
         extra_colors=extra_colors,
         stylesheet=stylesheet,
     )

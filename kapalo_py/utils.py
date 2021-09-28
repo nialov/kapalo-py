@@ -77,5 +77,15 @@ class StyleFunctionEnum(Enum):
     Enums to choose style function.
     """
 
-    BEDROCK = bedrock_style
-    LINEAMENT = lineament_style
+    BEDROCK = "Bedrock"
+    LINEAMENT = "Lineament"
+
+    @classmethod
+    def style_function(cls, enum) -> Callable:
+        """
+        Choose function based on enum.
+        """
+        styles = {cls.BEDROCK: bedrock_style, cls.LINEAMENT: lineament_style}
+        chosen = styles[enum]
+        assert callable(chosen)
+        return chosen

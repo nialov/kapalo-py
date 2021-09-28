@@ -486,7 +486,8 @@ def resolve_extras_inputs(
         gdf = gpd.read_file(path).to_crs("EPSG:4326")
         assert isinstance(gdf, gpd.GeoDataFrame)
         if style_function is not None:
-            assert callable(style_function)
+            if not callable(style_function):
+                raise TypeError(f"Expected {style_function} to be callable.")
 
         # Create partial function with color filled
         style_function_with_color = (
@@ -565,26 +566,6 @@ def webmap_compilation(
                 else None
             ),
         ).add_to(project_map)
-
-    #     if KURIKKA_LINEAMENTS.exists() and add_extra:
-    #         # Add lineaments
-    #         folium.GeoJson(
-    #             data="data/kurikka.geojson",
-    #             name="Kurikka Lineaments",
-    #             style_function=lineament_style,
-    #         ).add_to(project_map)
-
-    #     # rock_names = gpd.read_file
-    # ("data/kurikka_bedrock.geojson")["ROCK_NAME_"].values
-
-    #     if KURIKKA_BEDROCK.exists() and add_extra:
-    #         # Add bedrock
-    #         folium.GeoJson(
-    #             data="data/kurikka_bedrock.geojson",
-    #             name="Kurikka Bedrock",
-    #             popup=folium.GeoJsonPopup(fields=["ROCK_NAME_"]),
-    #             style_function=bedrock_style,
-    #         ).add_to(project_map)
 
     # Add user location control
     locate_control.LocateControl(
