@@ -28,6 +28,11 @@ JPG = "jpg"
 
 STYLE_PATH = Path("tests/sample_data/styles.css")
 
+KAPALO_SQL_DIR_PATH_PROJ_KURIKKA_GTK = Path("tests/sample_data/kapalo_sql")
+KURIKKA_GTK_PROJECT = "Kurikka GTK"
+DUMMY_IMG_DIR_PATH = Path("tests/sample_data/empty_imgs_dir")
+DUMMY_IMG_DIR_PATH.mkdir(exist_ok=True, parents=True)
+
 
 @lru_cache(maxsize=None)
 def test_add_local_stylesheet_params():
@@ -92,4 +97,18 @@ def test__resize_images_params():
     """
     return [
         (ORIGIN_IMG_DIR_PATH, JPG),
+    ]
+
+
+@lru_cache(maxsize=None)
+def test_webmap_compilation_params():
+    """
+    Params for test_webmap_compilation.
+    """
+    return [
+        (
+            KAPALO_SQL_DIR_PATH_PROJ_KURIKKA_GTK,
+            DUMMY_IMG_DIR_PATH,
+            [KURIKKA_GTK_PROJECT],
+        )
     ]

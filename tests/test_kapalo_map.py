@@ -8,7 +8,7 @@ import folium
 import pytest
 
 import tests
-from kapalo_py import kapalo_map
+from kapalo_py import kapalo_map, utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import KapaloTables
 
@@ -108,9 +108,7 @@ def test_observation_html(fix_observations, fix_images):
     observations = fix_observations
 
     for observation in observations:
-        result = kapalo_map.observation_html(
-            observation, fix_images, stylesheet=tests.STYLE_PATH
-        )
+        result = kapalo_map.observation_html(observation, fix_images)
 
         assert isinstance(result, str)
         assert len(result) > 0
@@ -140,7 +138,7 @@ def test_observation_marker(fix_observations, fix_images):
     """
     for observation in fix_observations:
         result = kapalo_map.observation_marker(
-            observation, imgs_path=fix_images, rechecks=[], stylesheet=tests.STYLE_PATH
+            observation, imgs_path=fix_images, rechecks=[]
         )
         assert isinstance(result, folium.Marker)
 
@@ -175,6 +173,79 @@ def test_create_project_map(path, projects, fix_images):
         exceptions=dict(),
         imgs_path=fix_images,
         rechecks=[],
-        stylesheet=tests.STYLE_PATH,
     )
+    assert isinstance(result, folium.Map)
+
+
+params = "extra_datasets,extra_names,extra_popup_fields,extra_style_functions"
+
+
+@pytest.mark.parametrize(
+    params,
+    [
+        ([], [], [], []),
+        (
+            [Path("tests/sample_data/sample_lineaments.geojson")],
+            ["Sample Lineaments"],
+            [""],
+            [utils.StyleFunctionEnum.LINEAMENT],
+        ),
+        (
+            [Path("tests/sample_data/sample_lineaments.geojson")] * 2,
+            ["Sample Lineaments"] * 2,
+            [],
+            [utils.StyleFunctionEnum.LINEAMENT] * 2,
+        ),
+        (
+            [Path("tests/sample_data/sample_lineaments.geojson")],
+            [],
+            [],
+            [],
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "sqlite_path,imgs_path,projects",
+    tests.test_webmap_compilation_params(),
+)
+def test_webmap_compilation(
+    sqlite_path,
+    imgs_path,
+    projects,
+    extra_datasets,
+    extra_names,
+    extra_popup_fields,
+    extra_style_functions,
+    tmp_path,
+):
+    """
+    Test webmap_compilation.
+    """
+    for extra_input in (
+        extra_datasets,
+        extra_names,
+        extra_popup_fields,
+        extra_style_functions,
+    ):
+        assert isinstance(extra_input, list)
+    map_save_path = tmp_path / "index.html"
+
+    result = kapalo_map.webmap_compilation(
+        kapalo_sqlite_path=sqlite_path,
+        kapalo_imgs_path=imgs_path,
+        exceptions=dict(),
+        rechecks=[],
+        stylesheet=tests.STYLE_PATH,
+        extra_datasets=extra_datasets,
+        extra_names=extra_names,
+        extra_popup_fields=extra_popup_fields,
+        extra_style_functions=extra_style_functions,
+        projects=projects,
+        map_save_path=map_save_path,
+    )
+
+    assert map_save_path.exists()
+    map_html = map_save_path.read_text()
+    assert len(map_html) > 0
+
     assert isinstance(result, folium.Map)
