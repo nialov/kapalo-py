@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post73.dev0+a60db7a"
+version = "0.0.0.post76.dev0+f4eaf83"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"

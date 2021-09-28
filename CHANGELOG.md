@@ -14,6 +14,8 @@
 
 #### Fixes
 
+-   (kapalo_map): fix adding color from cmd-line
+
 -   minor lint error fixes
 
 -   rm data
