@@ -4,11 +4,15 @@
 
 #### New Features
 
+-   (cli): handle extra geodataset inputting
+
 -   implement remote sync
 
 -   (cli): implement image resize
 
 #### Fixes
+
+-   minor lint error fixes
 
 -   rm data
 

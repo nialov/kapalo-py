@@ -4,4 +4,4 @@ kapalo_py.
 Kapalo data extraction and processing
 """
 
-__version__ = "0.0.0.post62.dev0+e28ce64"
+__version__ = "0.0.0.post67.dev0+f8b01a9"
