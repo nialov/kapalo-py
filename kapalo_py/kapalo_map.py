@@ -495,13 +495,14 @@ def resolve_extras_inputs(
 
         gdf = gpd.read_file(path).to_crs("EPSG:4326")
         assert isinstance(gdf, gpd.GeoDataFrame)
-        style_function_color = lambda _: style_function(_, color=color)
         folium_geojson = utils.FoliumGeoJson(
             data=gdf,
             name=name if name is not None else path.stem,
             popup_fields=popup,
             style_function=(
-                style_function_color if style_function is not None else style_function
+                lambda _: style_function(_, color=color)
+                if style_function is not None
+                else style_function
             ),
         )
         extras.append(folium_geojson)
