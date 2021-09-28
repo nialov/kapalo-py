@@ -4,7 +4,7 @@ Making spatial maps.
 
 import logging
 import sqlite3
-from functools import lru_cache
+from functools import lru_cache, partial
 from itertools import chain, compress, zip_longest
 from pathlib import Path
 from shutil import copy
@@ -473,16 +473,6 @@ def resolve_extras_inputs(
     """
     if len(extra_datasets) == 0:
         return []
-    # input_lengths = [
-    #     len(values)
-    #     for values in (extra_names, extra_popup_fields, extra_style_functions)
-    # ]
-    # if any(length > 0 for length in input_lengths) and input_lengths.count(
-    #     input_lengths[0]
-    # ) != len(input_lengths):
-    #     raise ValueError(
-    #         "Expected all extras to have names, popups and style_functions."
-    #     )
     extras = []
     for path, name, popup, style_function, color in zip_longest(
         extra_datasets,
@@ -495,16 +485,23 @@ def resolve_extras_inputs(
 
         gdf = gpd.read_file(path).to_crs("EPSG:4326")
         assert isinstance(gdf, gpd.GeoDataFrame)
+        if style_function is not None:
+            assert callable(style_function)
+
+        # Create partial function with color filled
+        style_function_with_color = (
+            partial(style_function, color=color) if style_function is not None else None
+        )
+
+        # Create FoliumGeoJson instance with all required information
+        # for adding the geodataset to folium map
         folium_geojson = utils.FoliumGeoJson(
             data=gdf,
             name=name if name is not None else path.stem,
             popup_fields=popup,
-            style_function=(
-                lambda _: style_function(_, color=color)
-                if style_function is not None
-                else style_function
-            ),
+            style_function=style_function_with_color,
         )
+        logging.info(f"Created FoliumGeoJson instance {folium_geojson}.")
         extras.append(folium_geojson)
     return extras
 
@@ -521,7 +518,7 @@ def webmap_compilation(
     extra_names: List[str],
     extra_colors: List[str],
     extra_popup_fields: List[str],
-    extra_style_functions: List[utils.StyleFunctionEnum],
+    extra_style_functions: List[Callable[..., Dict[str, str]]],
 ) -> folium.Map:
     """
     Compile the web map.
@@ -549,6 +546,15 @@ def webmap_compilation(
     )
 
     for extra in extras:
+        if extra.style_function is not None:
+            is_correct = callable(extra.style_function) and isinstance(
+                extra.style_function(None), dict
+            )
+            if not is_correct:
+                raise TypeError(
+                    f"Expected {extra.style_function} to be callable and "
+                    f"return dict: {extra.style_function(None)}"
+                )
         folium.GeoJson(
             data=extra.data,
             name=extra.name,

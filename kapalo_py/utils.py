@@ -13,13 +13,14 @@ LINEAR_TYPE = "linears"
 ROCK_OBS_TYPE = "rock_observations"
 
 
-def add_color(style_dict, color):
+def add_color(style_dict: Dict[str, str], color: Optional[str]) -> Dict[str, str]:
     """
     Add color to style dict.
 
     TODO: Replace with ability to specify style.
     """
     if color is None:
+        assert style_dict is not None
         return style_dict
     new_dict = {}
     for key, value in style_dict.items():
@@ -27,10 +28,11 @@ def add_color(style_dict, color):
             new_dict[key] = color
         else:
             new_dict[key] = value
+    assert new_dict is not None
     return new_dict
 
 
-def lineament_style(_, color: Optional[str] = None):
+def lineament_style(_, color: Optional[str] = None) -> Dict[str, str]:
     """
     Style lineament polylines.
     """
@@ -38,10 +40,12 @@ def lineament_style(_, color: Optional[str] = None):
         "color": "black",
         "weight": "1",
     }
-    return add_color(style_dict, color)
+    added = add_color(style_dict, color)
+    assert added is not None
+    return added
 
 
-def bedrock_style(_, color: Optional[str] = None):
+def bedrock_style(_, color: Optional[str] = None) -> Dict[str, str]:
     """
     Style bedrock polygons.
     """
