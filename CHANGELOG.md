@@ -14,6 +14,8 @@
 
 #### Fixes
 
+-   (cli): fix style function choice
+
 -   (kapalo_map): fix adding color from cmd-line
 
 -   minor lint error fixes
