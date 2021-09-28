@@ -4,6 +4,8 @@
 
 #### New Features
 
+-   (cli): allow specifying color in style
+
 -   (cli): handle extra geodataset inputting
 
 -   implement remote sync
