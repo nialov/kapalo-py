@@ -86,6 +86,10 @@ def compile_webmap(
         [],
         help="Choose function to visualize each geodataset or leave empty for default.",
     ),
+    extra_colors: List[str] = typer.Option(
+        [],
+        help="Choose colors for each geodataset.",
+    ),
 ):
     """
     Compile live-mapping website.
@@ -102,6 +106,7 @@ def compile_webmap(
         extra_names=extra_names,
         extra_popup_fields=extra_popup_fields,
         extra_style_functions=extra_style_functions,
+        extra_colors=extra_colors,
         stylesheet=stylesheet,
     )
 

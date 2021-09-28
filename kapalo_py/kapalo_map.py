@@ -466,6 +466,7 @@ def resolve_extras_inputs(
     extra_names: List[str],
     extra_popup_fields: List[str],
     extra_style_functions: List[Callable[..., Dict[str, str]]],
+    extra_colors: List[str],
 ) -> List[utils.FoliumGeoJson]:
     """
     Resolve extras inputs to utils.FoliumGeoJsons.
@@ -483,23 +484,25 @@ def resolve_extras_inputs(
     #         "Expected all extras to have names, popups and style_functions."
     #     )
     extras = []
-    for path, name, popup, style_function in zip_longest(
+    for path, name, popup, style_function, color in zip_longest(
         extra_datasets,
         extra_names,
         extra_popup_fields,
         extra_style_functions,
+        extra_colors,
         fillvalue=None,
     ):
 
         gdf = gpd.read_file(path).to_crs("EPSG:4326")
         assert isinstance(gdf, gpd.GeoDataFrame)
+        style_function_color = lambda _: style_function(_, color=color)
         folium_geojson = utils.FoliumGeoJson(
             data=gdf,
             name=name if name is not None else path.stem,
             popup_fields=popup,
-            style_function=style_function
-            if style_function is not None
-            else style_function,
+            style_function=(
+                style_function_color if style_function is not None else style_function
+            ),
         )
         extras.append(folium_geojson)
     return extras
@@ -515,6 +518,7 @@ def webmap_compilation(
     stylesheet: Path,
     extra_datasets: List[Path],
     extra_names: List[str],
+    extra_colors: List[str],
     extra_popup_fields: List[str],
     extra_style_functions: List[utils.StyleFunctionEnum],
 ) -> folium.Map:
@@ -527,6 +531,7 @@ def webmap_compilation(
         extra_names=extra_names,
         extra_popup_fields=extra_popup_fields,
         extra_style_functions=extra_style_functions,
+        extra_colors=extra_colors,
     )
     kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
 

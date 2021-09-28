@@ -13,25 +13,44 @@ LINEAR_TYPE = "linears"
 ROCK_OBS_TYPE = "rock_observations"
 
 
-def lineament_style(_):
+def add_color(style_dict, color):
+    """
+    Add color to style dict.
+
+    TODO: Replace with ability to specify style.
+    """
+    if color is None:
+        return style_dict
+    new_dict = {}
+    for key, value in style_dict.items():
+        if "color" in key.lower():
+            new_dict[key] = color
+        else:
+            new_dict[key] = value
+    return new_dict
+
+
+def lineament_style(_, color: Optional[str] = None):
     """
     Style lineament polylines.
     """
-    return {
+    style_dict = {
         "color": "black",
         "weight": "1",
     }
+    return add_color(style_dict, color)
 
 
-def bedrock_style(_):
+def bedrock_style(_, color: Optional[str] = None):
     """
     Style bedrock polygons.
     """
-    return {
+    style_dict = {
         "strokeColor": "blue",
         "fillOpacity": 0.0,
         "weight": 0.5,
     }
+    return add_color(style_dict, color)
 
 
 @dataclass
