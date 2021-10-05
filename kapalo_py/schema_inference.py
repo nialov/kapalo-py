@@ -43,6 +43,9 @@ class Columns:
     ST_2 = "ST_2"
 
 
+AZIMUTH_COLUMNS = (Columns.DIP_DIRECTION, Columns.DIRECTION)
+
+
 @unique
 class Table(Enum):
 

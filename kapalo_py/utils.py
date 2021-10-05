@@ -2,11 +2,13 @@
 General utilities for kapalo-py.
 """
 
-from dataclasses import dataclass
+import logging
+from dataclasses import dataclass, field
 from enum import Enum, unique
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Tuple
 
 import geopandas as gpd
+import numpy as np
 
 # Attributes of Observation class
 # TODO: Handle better.
@@ -16,6 +18,18 @@ ROCK_OBS_TYPE = "rock_observations"
 IMAGES_TYPE = "images"
 SAMPLES_TYPE = "samples"
 TEXTURES_TYPE = "textures"
+
+
+@dataclass
+class MapConfig:
+
+    """
+    Configuration from mapconfig.ini.
+    """
+
+    rechecks: Tuple[str, ...] = ()
+    exceptions: Dict[str, str] = field(default_factory=dict)
+    declination_value: float = 0.0
 
 
 def add_color(style_dict: Dict[str, str], color: Optional[str]) -> Dict[str, str]:
@@ -94,3 +108,46 @@ class StyleFunctionEnum(Enum):
         chosen = styles[enum]
         assert callable(chosen)
         return chosen
+
+
+def apply_declination_fix(azimuth, declination_value: float) -> float:
+    """
+    Apply declination fix to azimuth value.
+
+    Returns values in range [0, 360].
+    """
+    azimuth = float(azimuth)
+    invalid_azimuth = (
+        not isinstance(azimuth, float)
+        or np.isnan(azimuth)
+        or not (0.0 <= azimuth <= 360.0)
+    )
+    invalid_declination_value = (
+        not isinstance(declination_value, float)
+        or np.isnan(declination_value)
+        or not (-360.0 <= declination_value <= 360.0)
+    )
+
+    if invalid_azimuth or invalid_declination_value:
+
+        fault = (
+            f"Could not apply declination fix for azimuth {azimuth}"
+            f" with declination_value {declination_value} due to "
+        )
+
+        if invalid_azimuth and invalid_declination_value:
+            logging.error(fault + "both being invalid.")
+        elif invalid_azimuth:
+            logging.error(fault + "invalid azimuth.")
+        elif invalid_declination_value:
+            logging.error(fault + "invalid declination_value.")
+        else:
+            raise ValueError("Undefined result.")
+        return azimuth
+
+    added = azimuth + declination_value
+    if added > 360.0:
+        added = added - 360.0
+    if added < 0.0:
+        added = 360 + added
+    return added

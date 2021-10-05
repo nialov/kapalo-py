@@ -2,6 +2,7 @@
 Utilities for exporting kapalo data.
 """
 
+import logging
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Sequence
@@ -10,7 +11,7 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
 
-from kapalo_py import kapalo_map, utils
+from kapalo_py import kapalo_map, schema_inference, utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import Columns
 
@@ -70,7 +71,7 @@ def write_geodataframe(
 def export_projects_to_geodataframes(
     kapalo_sqlite_path: Path,
     projects: Sequence[str],
-    exceptions: Dict[str, str],
+    map_config: utils.MapConfig,
 ) -> Dict[str, gpd.GeoDataFrame]:
     """
     Export kapalo projects to folder.
@@ -79,7 +80,7 @@ def export_projects_to_geodataframes(
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
     (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
-        kapalo_tables, projects=projects, exceptions=exceptions
+        kapalo_tables, projects=projects, exceptions=map_config.exceptions
     )
 
     geodataframes: Dict[str, gpd.GeoDataFrame] = dict()
@@ -99,6 +100,7 @@ def export_projects_to_geodataframes(
         utils.TEXTURES_TYPE,
     ):
 
+        logging.info(f"Compiling dataframe from observation_type {observation_type}.")
         geodataframe = compile_type_dataframe(
             observations=observations_flat, observation_type=observation_type
         )
@@ -111,8 +113,25 @@ def export_projects_to_geodataframes(
 
         assert len(points) == geodataframe.shape[0]
 
+        logging.info("Adding x and y columns.")
         geodataframe["x"] = [point.x for point in points]
         geodataframe["y"] = [point.y for point in points]
+
+        logging.info("Performing declination fix on direction columns.")
+        for column in schema_inference.AZIMUTH_COLUMNS:
+            if column in geodataframe.columns:
+                logging.info(
+                    f"Applying declination fix to column: {column} with"
+                    f" declination_value of {map_config.declination_value}."
+                )
+                column_values = geodataframe[column]
+                assert column_values is not None
+                geodataframe[column] = [
+                    utils.apply_declination_fix(
+                        azimuth=azimuth, declination_value=map_config.declination_value
+                    )
+                    for azimuth in column_values.values
+                ]
 
         geodataframes[observation_type] = geodataframe
 

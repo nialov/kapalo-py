@@ -5,7 +5,7 @@ import configparser
 import logging
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List
 
 import typer
 from PIL import Image
@@ -14,8 +14,13 @@ from kapalo_py import export, kapalo_map, utils
 
 app = typer.Typer()
 
+# mapconfig.ini headers
 EXCEPTIONS = "exceptions"
 RECHECK = "recheck"
+DECLINATION = "declination"
+DECLINATION_VALUE = "declination_value"
+
+# rclone command arguments
 RCLONE = "rclone"
 SYNC = "sync"
 
@@ -30,26 +35,33 @@ INDEX_HTML = "index.html"
 MAPCONFIG = "mapconfig.ini"
 
 
-def read_config(config_path: Path) -> Tuple[Dict[str, str], List[str]]:
+def read_config(config_path: Path) -> utils.MapConfig:
     """
     Read mapconfig.ini if it exists.
     """
     if not config_path.exists():
-        return dict(), []
+        return utils.MapConfig()
 
     config_parser = configparser.ConfigParser(allow_no_value=True)
     # Overwrite reading keys as lowercase
     config_parser.optionxform = lambda option: option
     config_parser.read(config_path)
     assert RECHECK in config_parser
-    rechecks = list(config_parser[RECHECK].keys()) if RECHECK in config_parser else []
+    rechecks = tuple(config_parser[RECHECK].keys()) if RECHECK in config_parser else ()
     exceptions = (
         dict(config_parser[EXCEPTIONS].items())
         if EXCEPTIONS in config_parser
         else dict()
     )
+    declination_value = (
+        float(dict(config_parser[DECLINATION].items())[DECLINATION_VALUE])
+        if DECLINATION in config_parser
+        else 0.0
+    )
 
-    return exceptions, rechecks
+    return utils.MapConfig(
+        rechecks=rechecks, exceptions=exceptions, declination_value=declination_value
+    )
 
 
 @app.command()
@@ -95,13 +107,12 @@ def compile_webmap(
     """
     Compile live-mapping website.
     """
-    exceptions, rechecks = read_config(config_path)
+    map_config = read_config(config_path)
     kapalo_map.webmap_compilation(
         kapalo_sqlite_path=kapalo_sqlite_path,
         kapalo_imgs_path=kapalo_imgs_path,
         map_save_path=map_save_path,
-        exceptions=exceptions,
-        rechecks=rechecks,
+        map_config=map_config,
         projects=projects,
         extra_datasets=extra_datasets,
         extra_names=extra_names,
@@ -132,12 +143,12 @@ def export_observations(
     """
     Export kapalo tables.
     """
-    exceptions, _ = read_config(config_path)
+    map_config = read_config(config_path)
 
     geodataframes = export.export_projects_to_geodataframes(
         kapalo_sqlite_path=kapalo_sqlite_path,
         projects=projects,
-        exceptions=exceptions,
+        map_config=map_config,
     )
 
     logging.info(f"Creating export directory at {export_folder}.")

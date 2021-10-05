@@ -349,7 +349,7 @@ def gather_project_observations(
 
 
 def observation_marker(
-    observation: Observation, imgs_path: Path, rechecks: List[str]
+    observation: Observation, imgs_path: Path, rechecks: Tuple[str, ...]
 ) -> folium.Marker:
     """
     Make observation marker.
@@ -418,14 +418,13 @@ def create_project_map(
     kapalo_tables: List[KapaloTables],
     projects: List[str],
     imgs_path: Path,
-    exceptions: Dict[str, str],
-    rechecks: List[str],
+    map_config: utils.MapConfig,
 ) -> folium.Map:
     """
     Create folium map for project observations.
     """
     all_observations, all_project_tables = gather_project_observations_multiple(
-        kapalo_tables, projects=projects, exceptions=exceptions
+        kapalo_tables, projects=projects, exceptions=map_config.exceptions
     )
 
     # Initialize map and center it on the observations
@@ -453,7 +452,7 @@ def create_project_map(
         marker = observation_marker(
             observation=observation,
             imgs_path=imgs_path,
-            rechecks=rechecks,
+            rechecks=map_config.rechecks,
         )
         marker.add_to(folium_map)
     return folium_map
@@ -509,8 +508,7 @@ def webmap_compilation(
     kapalo_sqlite_path: Path,
     kapalo_imgs_path: Path,
     map_save_path: Path,
-    exceptions: Dict[str, str],
-    rechecks: List[str],
+    map_config: utils.MapConfig,
     projects: List[str],
     stylesheet: Path,
     extra_datasets: List[Path],
@@ -542,8 +540,7 @@ def webmap_compilation(
         kapalo_tables,
         projects=projects,
         imgs_path=imgs_path,
-        exceptions=exceptions,
-        rechecks=rechecks,
+        map_config=map_config,
     )
 
     for extra in extras:
