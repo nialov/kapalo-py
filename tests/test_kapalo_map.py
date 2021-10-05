@@ -139,7 +139,7 @@ def test_observation_marker(fix_observations, fix_images):
     """
     for observation in fix_observations:
         result = kapalo_map.observation_marker(
-            observation, imgs_path=fix_images, rechecks=[]
+            observation, imgs_path=fix_images, rechecks=()
         )
         assert isinstance(result, folium.Marker)
 
@@ -171,9 +171,8 @@ def test_create_project_map(path, projects, fix_images):
     result = kapalo_map.create_project_map(
         kapalo_tables=kapalo_tables,
         projects=projects,
-        exceptions=dict(),
         imgs_path=fix_images,
-        rechecks=[],
+        map_config=utils.MapConfig(),
     )
     assert isinstance(result, folium.Map)
 
@@ -242,8 +241,7 @@ def test_webmap_compilation(
     result = kapalo_map.webmap_compilation(
         kapalo_sqlite_path=sqlite_path,
         kapalo_imgs_path=imgs_path,
-        exceptions=dict(),
-        rechecks=[],
+        map_config=utils.MapConfig(),
         stylesheet=tests.STYLE_PATH,
         extra_datasets=extra_datasets,
         extra_names=extra_names,

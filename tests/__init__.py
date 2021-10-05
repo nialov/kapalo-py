@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from kapalo_py import utils
 from kapalo_py.schema_inference import Columns
 
 SIMPLE_HTML_FOR_MATCHING = """
@@ -109,5 +110,32 @@ def test_webmap_compilation_params():
             KAPALO_SQL_DIR_PATH_PROJ_KURIKKA_GTK,
             DUMMY_IMG_DIR_PATH,
             [KURIKKA_GTK_PROJECT],
+        )
+    ]
+
+
+@lru_cache(maxsize=None)
+def test_apply_declination_fix_params():
+    """
+    Params for test_apply_declination_fix.
+    """
+    return [
+        (358.0, 8.0, 6.0),
+        (0.0, -8.0, 352.0),
+        (180, 8.0, 188.0),
+    ]
+
+
+@lru_cache(maxsize=None)
+def test_export_projects_to_geodataframes_params():
+    """
+    Params for test_export_projects_to_geodataframes.
+    """
+    return [
+        (
+            KAPALO_SQL_DIR_PATH_PROJ_KURIKKA_GTK,
+            (KURIKKA_GTK_PROJECT,),
+            utils.MapConfig(declination_value=10.0),
+            False,
         )
     ]
