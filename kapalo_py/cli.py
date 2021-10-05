@@ -166,6 +166,7 @@ def _resize_images(
     destination_dir: Path,
     fixed_width: int,
     extension: str,
+    overwrite: bool,
 ):
     """
     Resize images from origin_dir to destination_dir.
@@ -173,6 +174,9 @@ def _resize_images(
     destination_dir.mkdir(parents=True, exist_ok=True)
     for image_path in origin_dir.glob(f"*.{extension}"):
         new_path = destination_dir / image_path.name
+        if new_path.exists() and not overwrite:
+            logging.info("Found existing converted image and overwrite is False.")
+            continue
 
         # From: https://www.holisticseo.digital/python-seo/resize-image/
         image = Image.open(image_path)
@@ -190,6 +194,7 @@ def resize_images(
     destination_dir: Path = typer.Argument(IMGS_DIR),
     fixed_width: int = typer.Option(800),
     extension: str = typer.Option("jpg"),
+    overwrite: bool = typer.Option(False),
 ):
     """
     Resize images from origin_dir to destination_dir.
@@ -199,6 +204,7 @@ def resize_images(
         destination_dir=destination_dir,
         fixed_width=fixed_width,
         extension=extension,
+        overwrite=overwrite,
     )
 
 
