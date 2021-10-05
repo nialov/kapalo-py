@@ -4,6 +4,8 @@
 
 #### New Features
 
+-   (export): apply declination fix on export
+
 -   (cli): allow specifying color in style
 
 -   (cli): handle extra geodataset inputting
