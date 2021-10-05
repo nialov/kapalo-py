@@ -2,6 +2,7 @@
 Command line integration.
 """
 import configparser
+import logging
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -124,7 +125,6 @@ def export_observations(
     ),
     export_folder: Path = typer.Option(
         default="exports",
-        exists=True,
         dir_okay=True,
     ),
     config_path: Path = typer.Option(default=MAPCONFIG),
@@ -140,7 +140,13 @@ def export_observations(
         exceptions=exceptions,
     )
 
+    logging.info(f"Creating export directory at {export_folder}.")
+    export_folder.mkdir(exist_ok=True)
     for observation_type, geodataframe in geodataframes.items():
+
+        if geodataframe.empty or geodataframe.shape[0] == 0:
+            logging.info(f"Empty geodataframe for observation_type {observation_type}.")
+            continue
 
         dataframe_path = Path(export_folder / f"{observation_type}.csv")
         geodataframe_path = Path(export_folder / f"{observation_type}.gpkg")
