@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2021-09-30)
+## Unreleased (2021-10-05)
 
 #### New Features
 
@@ -13,6 +13,8 @@
 -   (cli): implement image resize
 
 #### Fixes
+
+-   (export): export more datasets
 
 -   (cli): fix style function choice
 
