@@ -14,6 +14,8 @@
 
 #### Fixes
 
+-   (cli): allow explicit overwriting with convert
+
 -   (export): export more datasets
 
 -   (cli): fix style function choice
