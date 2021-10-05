@@ -90,7 +90,14 @@ def export_projects_to_geodataframes(
         return geodataframes
 
     # Iterate over chosen observation types
-    for observation_type in (utils.PLANAR_TYPE, utils.LINEAR_TYPE, utils.ROCK_OBS_TYPE):
+    for observation_type in (
+        utils.PLANAR_TYPE,
+        utils.LINEAR_TYPE,
+        utils.ROCK_OBS_TYPE,
+        utils.IMAGES_TYPE,
+        utils.SAMPLES_TYPE,
+        utils.TEXTURES_TYPE,
+    ):
 
         geodataframe = compile_type_dataframe(
             observations=observations_flat, observation_type=observation_type

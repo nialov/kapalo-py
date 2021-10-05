@@ -8,9 +8,14 @@ from typing import Callable, Dict, Optional
 
 import geopandas as gpd
 
+# Attributes of Observation class
+# TODO: Handle better.
 PLANAR_TYPE = "planars"
 LINEAR_TYPE = "linears"
 ROCK_OBS_TYPE = "rock_observations"
+IMAGES_TYPE = "images"
+SAMPLES_TYPE = "samples"
+TEXTURES_TYPE = "textures"
 
 
 def add_color(style_dict: Dict[str, str], color: Optional[str]) -> Dict[str, str]:
