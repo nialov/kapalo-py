@@ -175,12 +175,3 @@ class GroupTables:
     grouped_rock_obs: DataFrameGroupBy
     grouped_samples: DataFrameGroupBy
     grouped_textures: DataFrameGroupBy
-
-
-# connections = [
-#     {Table.OBSERVATIONS: Columns.OBS_ID, Table.TECTONIC_MEASUREMENTS: Columns.OBS_ID},
-#     {Table.TECTONIC_MEASUREMENTS: Columns.GDB_ID, Table.PLANAR: Columns.TM_GID},
-#     {Table.TECTONIC_MEASUREMENTS: Columns.GDB_ID, Table.LINEAR: Columns.TM_GID},
-#     {Table.IMAGES: Columns.OBS_ID, Table.OBSERVATIONS: Columns.OBS_ID},
-#     {Table.ROCK_OBS: Columns.OBS_ID, Table.OBSERVATIONS: Columns.OBS_ID},
-# ]

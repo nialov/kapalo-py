@@ -20,10 +20,6 @@ from kapalo_py import utils
 from kapalo_py.observation_data import Observation, create_observation
 from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
-# Remove static paths
-KURIKKA_LINEAMENTS = Path("data/kurikka.geojson")
-KURIKKA_BEDROCK = Path("data/kurikka_bedrock.geojson")
-
 
 def path_copy(src: Path, dest: Path):
     """
@@ -46,7 +42,7 @@ def dip_colors(dip: float):
     return color
 
 
-def sql_table_to_dataframe(table: str, connection: sqlite3.Connection):
+def sql_table_to_dataframe(table: str, connection: sqlite3.Connection) -> pd.DataFrame:
     """
     Read sqlite table to DataFrame.
     """
@@ -300,6 +296,7 @@ def observation_html(observation: Observation, imgs_path: Path) -> str:
     html = markdown.markdown(markdown_text, extensions=["tables"])
 
     html = html.replace("src=", "height=150 src=")
+    assert isinstance(html, str)
 
     return html
 
@@ -439,7 +436,8 @@ def create_project_map(
                 [
                     all_project_table.observations
                     for all_project_table in all_project_tables
-                ]
+                ],
+                ignore_index=True,
             )
         ),
         tiles="OpenStreetMap",
@@ -532,6 +530,8 @@ def webmap_compilation(
         extra_style_functions=extra_style_functions,
         extra_colors=extra_colors,
     )
+
+    # Read sqlite tables into DataFrames and parse into KapaloTables
     kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
 
     # Path to kapalo images

@@ -27,7 +27,7 @@ def compile_type_dataframe(
 
     for observation in observations:
 
-        # Make copy of planar DataFrame
+        # Make copy of DataFrame
         type_df: pd.DataFrame = getattr(observation, observation_type).copy()
 
         # Add column with observation jds
@@ -44,10 +44,11 @@ def compile_type_dataframe(
 
         type_observations.append(type_df)
 
-    dataframe = pd.concat(type_observations)
+    dataframe = pd.concat(type_observations, ignore_index=True)
 
     assert isinstance(dataframe, pd.DataFrame)
 
+    # Coordinates in dataframe are in 4326 but are transformed to 3067
     geodataframe = gpd.GeoDataFrame(dataframe, crs="EPSG:4326").to_crs("EPSG:3067")
 
     assert isinstance(geodataframe, gpd.GeoDataFrame)
@@ -81,7 +82,7 @@ def export_projects_to_geodataframes(
         kapalo_tables, projects=projects, exceptions=exceptions
     )
 
-    geodataframes = dict()
+    geodataframes: Dict[str, gpd.GeoDataFrame] = dict()
 
     observations_flat = list(chain(*all_observations))
     if len(observations_flat) == 0:

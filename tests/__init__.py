@@ -7,7 +7,6 @@ from itertools import cycle
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
 from kapalo_py.schema_inference import Columns
 

@@ -3,7 +3,7 @@ Observation data management and parsing.
 """
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -83,7 +83,9 @@ def resolve_tm_gid(tectonics: pd.DataFrame) -> Optional[str]:
                 f"Expected one tectonic measurement id per observation.\n"
                 f"Found {len(gdb_ids)} which were {list(gdb_ids)}. Choosing last."
             )
-            return gdb_ids[-1]
+            last = gdb_ids[-1]
+            assert isinstance(last, str)
+            return last
         return None
     gdb_id: str = gdb_ids[0]
 
@@ -162,7 +164,7 @@ def create_observation(
     )
 
     texture_dfs = []
-    rock_textures = []
+    rock_textures: List[Union[str, float]] = []
 
     for rop_gid in rock_observations[Columns.GDB_ID].values:
 
