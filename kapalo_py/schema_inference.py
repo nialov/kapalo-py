@@ -5,10 +5,11 @@ Documentation of schema links.
 from dataclasses import asdict, dataclass, fields
 from enum import Enum, unique
 from itertools import chain
-from typing import Sequence
+from typing import Sequence, Tuple
 
 import numpy as np
 import pandas as pd
+import pandera as pa
 from pandas.core.groupby.generic import DataFrameGroupBy
 
 
@@ -44,6 +45,35 @@ class Columns:
 
 
 AZIMUTH_COLUMNS = (Columns.DIP_DIRECTION, Columns.DIRECTION)
+
+PLANAR_COLUMNS = (
+    Columns.REMARKS,
+    Columns.DIP,
+    Columns.DIP_DIRECTION,
+    Columns.STYPE_TEXT,
+    Columns.FOL_TYPE_TEXT,
+    Columns.STYPE,
+)
+LINEAR_COLUMNS = (
+    Columns.REMARKS,
+    Columns.DIRECTION,
+    Columns.PLUNGE,
+    Columns.STYPE_TEXT,
+    Columns.STYPE,
+)
+
+IMAGE_COLUMNS = (Columns.PICTURE_ID, Columns.REMARKS)
+SAMPLES_COLUMNS = (Columns.SAMPLE_ID, Columns.FIELD_NAME)
+ROCK_OBSERVATIONS_COLUMNS_INITIAL = (
+    Columns.REMARKS,
+    Columns.FIELD_NAME,
+    Columns.ROCK_NAME,
+    Columns.GDB_ID,
+)
+ROCK_OBSERVATIONS_COLUMNS_FINAL = tuple(
+    col for col in ROCK_OBSERVATIONS_COLUMNS_INITIAL if col not in (Columns.GDB_ID,)
+)
+TEXTURE_COLUMNS = (Columns.ST_2, Columns.ST_1)
 
 
 @unique
@@ -178,3 +208,23 @@ class GroupTables:
     grouped_rock_obs: DataFrameGroupBy
     grouped_samples: DataFrameGroupBy
     grouped_textures: DataFrameGroupBy
+
+
+def default_schema_from_columns(columns: Tuple[str, ...]):
+    """
+    Create default schema for just column names.
+    """
+    schema = pa.DataFrameSchema(
+        columns={col: pa.Column(required=True, nullable=True) for col in columns}
+    )
+    return schema
+
+
+PLANARS_SCHEMA = default_schema_from_columns(columns=PLANAR_COLUMNS)
+LINEARS_SCHEMA = default_schema_from_columns(columns=LINEAR_COLUMNS)
+IMAGE_SCHEMA = default_schema_from_columns(columns=IMAGE_COLUMNS)
+ROCK_OBSERVATIONS_SCHEMA = default_schema_from_columns(
+    columns=ROCK_OBSERVATIONS_COLUMNS_FINAL
+)
+SAMPLES_SCHEMA = default_schema_from_columns(columns=SAMPLES_COLUMNS)
+TEXTURES_SCHEMA = default_schema_from_columns(columns=TEXTURE_COLUMNS)

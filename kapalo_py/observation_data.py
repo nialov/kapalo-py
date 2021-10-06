@@ -7,7 +7,9 @@ from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
+import pandera as pa
 
+from kapalo_py import schema_inference
 from kapalo_py.schema_inference import Columns, GroupTables
 
 
@@ -24,12 +26,53 @@ class Observation:
     longitude: float
     remarks: str
     project: str
-    planars: pd.DataFrame = pd.DataFrame()
-    linears: pd.DataFrame = pd.DataFrame()
-    images: pd.DataFrame = pd.DataFrame()
-    rock_observations: pd.DataFrame = pd.DataFrame()
-    samples: pd.DataFrame = pd.DataFrame()
-    textures: pd.DataFrame = pd.DataFrame()
+    planars: pd.DataFrame = pd.DataFrame(columns=schema_inference.PLANAR_COLUMNS)
+    linears: pd.DataFrame = pd.DataFrame(columns=schema_inference.LINEAR_COLUMNS)
+    images: pd.DataFrame = pd.DataFrame(columns=schema_inference.IMAGE_COLUMNS)
+    rock_observations: pd.DataFrame = pd.DataFrame(
+        columns=schema_inference.ROCK_OBSERVATIONS_COLUMNS_FINAL
+    )
+    samples: pd.DataFrame = pd.DataFrame(columns=schema_inference.SAMPLES_COLUMNS)
+    textures: pd.DataFrame = pd.DataFrame(columns=schema_inference.TEXTURE_COLUMNS)
+
+    def __post_init__(self):
+        """
+        Validate all DataFrames.
+        """
+        failed = False
+        attributes = (
+            "planars",
+            "linears",
+            "images",
+            "rock_observations",
+            "samples",
+            "textures",
+        )
+        schemas = (
+            schema_inference.PLANARS_SCHEMA,
+            schema_inference.LINEARS_SCHEMA,
+            schema_inference.IMAGE_SCHEMA,
+            schema_inference.ROCK_OBSERVATIONS_SCHEMA,
+            schema_inference.SAMPLES_SCHEMA,
+            schema_inference.TEXTURES_SCHEMA,
+        )
+        assert len(attributes) == len(schemas)
+        for attr, schema in zip(attributes, schemas):
+            df = getattr(self, attr)
+            assert isinstance(df, pd.DataFrame)
+            assert isinstance(schema, pa.DataFrameSchema)
+            try:
+                schema.validate(df, lazy=True)
+            except pa.errors.SchemaErrors as schema_errors:
+                failed = True
+                logging.error(
+                    f"Failure cases for {attr}:\n{schema_errors.failure_cases}"
+                )
+        if failed:
+            raise ValueError(
+                "Observation dataframes failed validation."
+                " See printed stderr above for failure cases."
+            )
 
 
 def get_group_data(
@@ -52,7 +95,6 @@ def get_group_data(
 
     for col in columns:
         if col not in group.columns:
-            print(group.columns)
             raise ValueError(
                 f"Column {col} not found in group DataFrame columns:."
                 f"\n{group.columns}"
@@ -112,55 +154,39 @@ def create_observation(
     )
     gdb_id = resolve_tm_gid(tectonics=tectonics)
     if gdb_id is None:
-        planars = pd.DataFrame()
-        linears = pd.DataFrame()
+        planars = pd.DataFrame(columns=schema_inference.PLANAR_COLUMNS)
+        linears = pd.DataFrame(columns=schema_inference.LINEAR_COLUMNS)
         gdb_id = ""
 
     else:
         planars = get_group_data(
             group_name=gdb_id,
             grouped=group_tables.grouped_planar,
-            columns=(
-                Columns.DIP,
-                Columns.DIP_DIRECTION,
-                Columns.STYPE_TEXT,
-                Columns.FOL_TYPE_TEXT,
-                Columns.STYPE,
-            ),
+            columns=schema_inference.PLANAR_COLUMNS,
         )
         linears = get_group_data(
             group_name=gdb_id,
             grouped=group_tables.grouped_linear,
-            columns=(
-                Columns.DIRECTION,
-                Columns.PLUNGE,
-                Columns.STYPE_TEXT,
-                Columns.STYPE,
-            ),
+            columns=schema_inference.LINEAR_COLUMNS,
         )
 
     images = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_images,
-        columns=(Columns.PICTURE_ID, Columns.REMARKS),
+        columns=schema_inference.IMAGE_COLUMNS,
     )
 
     samples = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_samples,
-        columns=[Columns.SAMPLE_ID, Columns.FIELD_NAME],
+        columns=schema_inference.SAMPLES_COLUMNS,
         exceptions=exceptions,
     )
 
     rock_observations = get_group_data(
         group_name=obs_id,
         grouped=group_tables.grouped_rock_obs,
-        columns=(
-            Columns.REMARKS,
-            Columns.FIELD_NAME,
-            Columns.ROCK_NAME,
-            Columns.GDB_ID,
-        ),
+        columns=schema_inference.ROCK_OBSERVATIONS_COLUMNS_INITIAL,
     )
 
     texture_dfs = []
@@ -173,7 +199,7 @@ def create_observation(
         textures = get_group_data(
             group_name=rop_gid,
             grouped=group_tables.grouped_textures,
-            columns=[Columns.ST_2, Columns.ST_1],
+            columns=schema_inference.TEXTURE_COLUMNS,
             exceptions=exceptions,
         )
 
@@ -190,7 +216,7 @@ def create_observation(
     all_textures = (
         pd.concat(texture_dfs, ignore_index=True)
         if len(texture_dfs) != 0
-        else pd.DataFrame()
+        else pd.DataFrame(columns=schema_inference.TEXTURE_COLUMNS)
     )
 
     observation = Observation(
