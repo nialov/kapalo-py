@@ -177,6 +177,7 @@ def dataframe_to_markdown(dataframe: pd.DataFrame) -> str:
     if not isinstance(markdown_str, str):
         return "\n"
     markdown_str += "\n\n"
+    assert isinstance(markdown_str, str)
     return markdown_str
 
 
@@ -211,14 +212,13 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
         )
     ):
 
+        # assert types
         assert isinstance(image_caption, str)
+        assert isinstance(image_id, str)
 
         # Add linebreak
         # markdown_text += "\n"
         markdown_text_list.append("\n")
-
-        # assert type
-        assert isinstance(image_id, str)
 
         # Get boolean list of matches
         matches = [image_id in img_path.stem for img_path in img_paths]
@@ -249,6 +249,12 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
             # Add only link text
             markdown_text_list.append(f"\n[{image_caption, image_id}]({match_path})")
 
+    if not all(isinstance(part, str) for part in markdown_text_list):
+        logging.error(
+            "Expected only str members in markdown_text_list."
+            f" Unique types: {set(map(type, markdown_text_list))}. Converting."
+        )
+        markdown_text_list = [str(value) for value in markdown_text_list]
     return "".join(markdown_text_list)
 
 
@@ -282,7 +288,7 @@ def observation_html(observation: Observation, imgs_path: Path) -> str:
         markdown_text_list.append(dataframe_to_markdown(dataframe=dataframe))
 
     markdown_text_list.append("\n#### Observation remarks\n\n")
-    markdown_text_list.append(observation.remarks)
+    markdown_text_list.append(str(observation.remarks))
 
     markdown_text_list.append(
         "\n#### Images\n\n" if not observation.images.empty else "\n"
@@ -290,6 +296,14 @@ def observation_html(observation: Observation, imgs_path: Path) -> str:
     markdown_text_list.append(
         observation_image_markdown(observation=observation, imgs_path=imgs_path)
     )
+
+    if not all(isinstance(value, str) for value in markdown_text_list):
+        unexpected_type = set(map(type, markdown_text_list)).remove(str)
+        logging.error(
+            f"Unexpected non-str type {unexpected_type} in markdown_text_list."
+            " Converting to str."
+        )
+        markdown_text_list = list(map(str, markdown_text_list))
 
     markdown_text = "".join(markdown_text_list)
 
