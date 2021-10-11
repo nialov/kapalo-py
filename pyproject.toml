@@ -57,6 +57,7 @@ isort = {version = "*", optional = true}
 mypy = {version = "*", optional = true}
 Pillow = "^8.3.2"
 pandera = "^0.7.2"
+structlog = "^21.1.0"
 
 [tool.poetry.dev-dependencies]
 nox = "*"
@@ -67,6 +68,7 @@ pytest = "*"
 pre-commit = "*"
 bpython = "^0.21"
 hypothesis = "^6.23.1"
+colorama = "^0.4.4"
 
 [tool.poetry.extras]
 coverage = ["coverage", "coverage-badge"]
