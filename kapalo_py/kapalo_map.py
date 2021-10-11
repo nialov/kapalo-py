@@ -20,6 +20,8 @@ from kapalo_py import utils
 from kapalo_py.observation_data import Observation, create_observation
 from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
+STYLES_CSS = "styles.css"
+
 
 def path_copy(src: Path, dest: Path):
     """
@@ -284,9 +286,16 @@ def observation_html(observation: Observation, imgs_path: Optional[Path]) -> str
             "Textures",
         ),
     ):
-        markdown_text_list.append(
-            f"\n#### {dataframe_label if not dataframe.empty else ''}\n\n"
-        )
+        if dataframe.empty:
+            logging.info(f"DataFrame for {dataframe_label} was empty.")
+            continue
+        if Columns.REMARKS in dataframe.columns:
+            logging.info(
+                f"Removing column {Columns.REMARKS} from dataframe"
+                f" {dataframe_label} inplace before adding to map markdown."
+            )
+            dataframe.drop(columns=[Columns.REMARKS], inplace=True)
+        markdown_text_list.append(f"\n#### {dataframe_label}\n\n")
         markdown_text_list.append(dataframe_to_markdown(dataframe=dataframe))
 
     markdown_text_list.append("\n#### Observation remarks\n\n")
@@ -319,7 +328,7 @@ def observation_html(observation: Observation, imgs_path: Optional[Path]) -> str
 
 def add_local_stylesheet(html: str, stylesheet: Path):
     """
-    Add local stylesheet reference to html.
+    Add local stylesheet reference to html string.
     """
     assert "style" in html
     if not stylesheet.exists():
@@ -607,10 +616,6 @@ def webmap_compilation(
     # Save map to live-mapping repository
     project_map.save(str(map_save_path))
 
-    # Replace image paths to local
-    # replaced_img_paths_html = map_save_path.read_text().replace(
-    #     "data/kapalo_imgs", "kapalo_imgs"
-    # )
     replaced_img_paths_html = map_save_path.read_text().replace(
         str(kapalo_imgs_path), kapalo_imgs_path.name
     )
@@ -621,13 +626,7 @@ def webmap_compilation(
 
     map_save_path.write_text(styled_html)
 
-    # # Remove old
-    # rmtree(map_imgs_path)
-
-    # # Copy over images
-    # copytree(kapalo_imgs_path, map_imgs_path)
-
     # Copy css to local map project
-    path_copy(stylesheet, map_save_path.parent / "styles.css")
+    path_copy(stylesheet, map_save_path.parent / STYLES_CSS)
 
     return project_map
