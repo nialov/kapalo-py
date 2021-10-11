@@ -39,3 +39,17 @@ def test__resize_images(origin_dir, extension, fixed_width, tmp_path, overwrite)
     )
 
     assert origin_dir_filesize > destination_dir_filesize
+
+
+@pytest.mark.parametrize("logging_level,will_fail", tests.test__setup_logging_params())
+def test__setup_logging(logging_level, will_fail):
+    """
+    Test _setup_logging.
+    """
+    try:
+        result = cli._setup_logging(logging_level=logging_level)
+    except Exception:
+        if will_fail:
+            return
+        raise
+    assert result is None

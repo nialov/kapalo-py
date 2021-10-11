@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from kapalo_py import utils
+from kapalo_py import cli, utils
 from kapalo_py.schema_inference import Columns
 
 SIMPLE_HTML_FOR_MATCHING = """
@@ -138,4 +138,19 @@ def test_export_projects_to_geodataframes_params():
             utils.MapConfig(declination_value=10.0),
             False,
         )
+    ]
+
+
+@lru_cache(maxsize=None)
+def test__setup_logging_params():
+    """
+    Params for test__setup_logging.
+    """
+    return [
+        (cli.LoggingLevel.DEBUG, False),
+        (cli.LoggingLevel.INFO, False),
+        (cli.LoggingLevel.WARNING, False),
+        (cli.LoggingLevel.ERROR, False),
+        (cli.LoggingLevel.CRITICAL, False),
+        (2000, True),
     ]
