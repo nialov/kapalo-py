@@ -5,7 +5,7 @@ Utilities for exporting kapalo data.
 import logging
 from itertools import chain
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List, Sequence, Tuple
 
 import geopandas as gpd
 import pandas as pd
@@ -76,33 +76,50 @@ def export_projects_to_geodataframes(
     """
     Export kapalo projects to folder.
     """
-    # Read kapalo.sqlite
+    logging.info(f"Reading sqlite files at {kapalo_sqlite_path}.")
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
+    logging.info(f"Gathering project observations from projects: {projects}.")
     (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
         kapalo_tables, projects=projects, exceptions=map_config.exceptions
     )
 
-    geodataframes: Dict[str, gpd.GeoDataFrame] = dict()
-
     observations_flat = list(chain(*all_observations))
     if len(observations_flat) == 0:
-        print("No Observations gathered/found.")
-        return geodataframes
+        logging.warning("No Observations gathered/found.")
+        return dict()
 
-    # Iterate over chosen observation types
-    for observation_type in (
+    return compile_type_dataframes(
+        observations=observations_flat, declination_value=map_config.declination_value
+    )
+
+
+def compile_type_dataframes(
+    observations: List[Observation],
+    declination_value: float,
+    observation_types: Tuple[str, ...] = (
         utils.PLANAR_TYPE,
         utils.LINEAR_TYPE,
         utils.ROCK_OBS_TYPE,
         utils.IMAGES_TYPE,
         utils.SAMPLES_TYPE,
         utils.TEXTURES_TYPE,
-    ):
+    ),
+) -> Dict[str, gpd.GeoDataFrame]:
+    """
+    Create dataframes of observation type from observations.
+
+    E.g. planar, linear or rock observations.
+
+    Applies declination fix based on given value.
+    """
+    geodataframes: Dict[str, gpd.GeoDataFrame] = dict()
+    # Iterate over chosen observation types
+    for observation_type in observation_types:
 
         logging.info(f"Compiling dataframe from observation_type {observation_type}.")
         geodataframe = compile_type_dataframe(
-            observations=observations_flat, observation_type=observation_type
+            observations=observations, observation_type=observation_type
         )
 
         points: List[Point] = [
@@ -111,6 +128,7 @@ def export_projects_to_geodataframes(
             if isinstance(point, Point)
         ]
 
+        logging.debug("Asserting that all geometries are points.")
         assert len(points) == geodataframe.shape[0]
 
         logging.info("Adding x and y columns.")
@@ -122,13 +140,13 @@ def export_projects_to_geodataframes(
             if column in geodataframe.columns:
                 logging.info(
                     f"Applying declination fix to column: {column} with"
-                    f" declination_value of {map_config.declination_value}."
+                    f" declination_value of {declination_value}."
                 )
                 column_values = geodataframe[column]
                 assert column_values is not None
                 geodataframe[column] = [
                     utils.apply_declination_fix(
-                        azimuth=azimuth, declination_value=map_config.declination_value
+                        azimuth=azimuth, declination_value=declination_value
                     )
                     for azimuth in column_values.values
                 ]

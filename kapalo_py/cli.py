@@ -156,7 +156,9 @@ def export_observations(
     for observation_type, geodataframe in geodataframes.items():
 
         if geodataframe.empty or geodataframe.shape[0] == 0:
-            logging.info(f"Empty geodataframe for observation_type {observation_type}.")
+            logging.warning(
+                f"Empty geodataframe for observation_type {observation_type}."
+            )
             continue
 
         dataframe_path = Path(export_folder / f"{observation_type}.csv")
