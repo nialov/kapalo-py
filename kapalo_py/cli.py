@@ -4,11 +4,14 @@ Command line integration.
 import configparser
 import logging
 import subprocess
+from enum import Enum, unique
 from pathlib import Path
 from typing import List
 
+import structlog
 import typer
 from PIL import Image
+from structlog.stdlib import get_logger
 
 from kapalo_py import export, kapalo_map, utils
 
@@ -33,6 +36,20 @@ DATA_IMGS_DIR_PATH = f"data/{IMGS_DIR}"
 LOCAL_STYLESHEET = f"{Path(__file__).parent.parent.resolve()}/styles.css"
 INDEX_HTML = "index.html"
 MAPCONFIG = "mapconfig.ini"
+
+
+@unique
+class LoggingLevel(Enum):
+
+    """
+    Enums for logging levels.
+    """
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
 
 
 def read_config(config_path: Path) -> utils.MapConfig:
@@ -62,6 +79,53 @@ def read_config(config_path: Path) -> utils.MapConfig:
     return utils.MapConfig(
         rechecks=rechecks, exceptions=exceptions, declination_value=declination_value
     )
+
+
+def _setup_logging(logging_level: LoggingLevel = LoggingLevel.WARNING):
+    """
+    Set up logging level from cli option.
+
+    Default is WARNING.
+    """
+    logging_level_int = getattr(logging, logging_level.value, None)
+    if not isinstance(logging_level_int, int):
+        raise TypeError(
+            f"Expected logging_level to be an attribute of logging. Got: {logging_level}."
+        )
+
+    structlog.configure(
+        processors=[
+            structlog.stdlib.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.processors.JSONRenderer(indent=2),
+        ],
+        context_class=dict,
+        wrapper_class=structlog.make_filtering_bound_logger(
+            min_level=logging_level_int - 10,
+        ),
+        cache_logger_on_first_use=True,
+    )
+    logger = get_logger()
+    logger.debug(
+        "Set up logging level for kapalo-py.",
+        logging_level=logging_level,
+        logging_level_int=logging_level_int,
+    )
+    try:
+        raise ValueError("heyy you we errored")
+    except ValueError:
+        logger.error("Error happened", exc_info=True)
+
+
+@app.callback()
+def setup_logging(logging_level: LoggingLevel = typer.Option(LoggingLevel.WARNING)):
+    """
+    Kapalo data extraction and processing.
+    """
+    _setup_logging(logging_level=logging_level)
 
 
 @app.command()
