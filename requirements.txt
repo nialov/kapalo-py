@@ -18,7 +18,7 @@ charset-normalizer==2.0.6; python_full_version >= "3.6.0" and python_version >= 
 click-plugins==1.1.1; python_version >= "3.6"
 click==7.1.2; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6" and python_version < "4"
 cligj==0.7.2; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version < "4" and python_version >= "3.6"
-colorama==0.4.4; python_version >= "3.7" and python_full_version < "3.0.0" and sys_platform == "win32" or sys_platform == "win32" and python_version >= "3.7" and python_full_version >= "3.5.0"
+colorama==0.4.4; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")
 colorlog==6.4.1; python_version >= "3.6"
 curtsies==0.3.7; python_version >= "3.6"
 cwcwidth==0.1.4; python_version >= "3.6"
@@ -101,6 +101,7 @@ shapely==1.7.1; python_version >= "3.6"
 six==1.16.0; python_full_version >= "3.7.1" and python_version >= "3.6" and (python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6") and (python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version >= "3.6") and (python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6") and (python_version >= "3.7" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version >= "3.7")
 sniffio==1.2.0; python_full_version >= "3.6.2" and python_version >= "3.6"
 sortedcontainers==2.4.0; python_version >= "3.6"
+structlog==21.1.0; python_version >= "3.6"
 tabulate==0.8.9
 terminado==0.12.1; python_version >= "3.6"
 testpath==0.5.0; python_version >= "3.7"

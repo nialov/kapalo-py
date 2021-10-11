@@ -4,6 +4,8 @@
 
 #### New Features
 
+-   (cli): add logging setup
+
 -   (observation_data): add column validation
 
 -   (export): apply declination fix on export
