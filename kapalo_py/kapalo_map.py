@@ -8,7 +8,7 @@ from functools import lru_cache, partial
 from itertools import chain, compress, zip_longest
 from pathlib import Path
 from shutil import copy
-from typing import Callable, Dict, List, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import folium
 import geopandas as gpd
@@ -190,7 +190,9 @@ def get_image_paths(path: Path) -> List[Path]:
     return img_paths
 
 
-def observation_image_markdown(observation: Observation, imgs_path: Path) -> str:
+def observation_image_markdown(
+    observation: Observation, imgs_path: Optional[Path]
+) -> str:
     """
     Create markdown for images.
     """
@@ -198,7 +200,7 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
     markdown_text = "\n"
     markdown_text_list.append(markdown_text)
 
-    if Columns.PICTURE_ID not in observation.images.columns:
+    if Columns.PICTURE_ID not in observation.images.columns or imgs_path is None:
         return markdown_text
 
     # Get all images in imgs_path
@@ -258,7 +260,7 @@ def observation_image_markdown(observation: Observation, imgs_path: Path) -> str
     return "".join(markdown_text_list)
 
 
-def observation_html(observation: Observation, imgs_path: Path) -> str:
+def observation_html(observation: Observation, imgs_path: Optional[Path]) -> str:
     """
     Create html summary of observation.
     """
@@ -363,7 +365,7 @@ def gather_project_observations(
 
 
 def observation_marker(
-    observation: Observation, imgs_path: Path, rechecks: Tuple[str, ...]
+    observation: Observation, imgs_path: Optional[Path], rechecks: Tuple[str, ...]
 ) -> folium.Marker:
     """
     Make observation marker.
@@ -428,6 +430,32 @@ def gather_project_observations_multiple(
     return all_observations, all_project_tables
 
 
+def add_observations_to_map(
+    observations: List[Observation],
+    folium_map: folium.Map,
+    imgs_path: Optional[Path],
+    rechecks: Tuple[str, ...] = (),
+) -> folium.Map:
+    """
+    Add observations to folium map as folium markers.
+    """
+    observation_id_set = set()
+    for observation in chain(observations):
+        obs_id = observation.obs_id
+        if obs_id in observation_id_set:
+            logging.error(f"Duplicate obs_id for {obs_id}. Skipping.")
+            continue
+        observation_id_set.add(obs_id)
+
+        marker = observation_marker(
+            observation=observation,
+            imgs_path=imgs_path,
+            rechecks=rechecks,
+        )
+        marker.add_to(folium_map)
+    return folium_map
+
+
 def create_project_map(
     kapalo_tables: List[KapaloTables],
     projects: List[str],
@@ -441,8 +469,8 @@ def create_project_map(
         kapalo_tables, projects=projects, exceptions=map_config.exceptions
     )
 
-    # Initialize map and center it on the observations
-    # crs is EPSG3857 by default
+    logging.info("Initializing map and centering it on the observations.")
+    logging.debug("folium.Map crs is EPSG3857 by default.")
     folium_map = folium.Map(
         location=location_centroid(
             observations=pd.concat(
@@ -455,20 +483,13 @@ def create_project_map(
         ),
         tiles="OpenStreetMap",
     )
-    observation_id_set = set()
-    for observation in chain(*all_observations):
-        obs_id = observation.obs_id
-        if obs_id in observation_id_set:
-            logging.error(f"Duplicate obs_id for {obs_id}. Skipping.")
-            continue
-        observation_id_set.add(obs_id)
 
-        marker = observation_marker(
-            observation=observation,
-            imgs_path=imgs_path,
-            rechecks=map_config.rechecks,
-        )
-        marker.add_to(folium_map)
+    folium_map = add_observations_to_map(
+        observations=list(chain(*all_observations)),
+        folium_map=folium_map,
+        imgs_path=imgs_path,
+        rechecks=map_config.rechecks,
+    )
     return folium_map
 
 
