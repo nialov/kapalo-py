@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased (2021-10-06)
+## Unreleased (2021-10-11)
 
 #### New Features
+
+-   (observation_data): add column validation
 
 -   (export): apply declination fix on export
 
@@ -15,6 +17,8 @@
 -   (cli): implement image resize
 
 #### Fixes
+
+-   (kapalo_map): handle non-str inputs
 
 -   (cli): allow explicit overwriting with convert
 
