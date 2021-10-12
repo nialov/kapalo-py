@@ -22,6 +22,8 @@
 
 #### Fixes
 
+-   (logger): finalize logging setup
+
 -   add module wide logging setup
 
 -   (kapalo_map): handle non-str inputs
