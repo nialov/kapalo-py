@@ -22,6 +22,8 @@
 
 #### Fixes
 
+-   add module wide logging setup
+
 -   (kapalo_map): handle non-str inputs
 
 -   (cli): allow explicit overwriting with convert
