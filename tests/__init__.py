@@ -6,7 +6,9 @@ from functools import lru_cache
 from itertools import cycle
 from pathlib import Path
 
+import geopandas as gpd
 import pandas as pd
+from shapely.geometry import Point
 
 from kapalo_py import cli, utils
 from kapalo_py.schema_inference import Columns
@@ -153,4 +155,30 @@ def test__setup_logging_params():
         (cli.LoggingLevel.ERROR, False),
         (cli.LoggingLevel.CRITICAL, False),
         (2000, True),
+    ]
+
+
+@lru_cache(maxsize=None)
+def test_write_geodataframes_params():
+    """
+    Params for test_write_geodataframes.
+    """
+    return [
+        {
+            "planars": gpd.GeoDataFrame(
+                {
+                    "geometry": [Point(1, 1), Point(2, 3), Point(5, 5)],
+                    "data": [1, 2, 3],
+                    "names": ["One", "Two", "Three"],
+                }
+            ),
+            "linears": gpd.GeoDataFrame(
+                {
+                    "geometry": [Point(1, 1), Point(2, 3), Point(5, 5)],
+                    "data": [1, 2, 3],
+                    "names": ["One", "Two", "Three"],
+                }
+            ),
+        },
+        {},
     ]

@@ -2,7 +2,11 @@
 Tests for export.py.
 """
 
+from pathlib import Path
+
+import geopandas as gpd
 import pytest
+from shapely.geometry import Point
 
 import tests
 from kapalo_py import export, schema_inference, utils
@@ -41,3 +45,14 @@ def test_export_projects_to_geodataframes(
                 amount_same = sum(result_gdf[col] == default_gdf[col])
                 # But in this case there's less than 1 % invalid values
                 assert amount_same < result_gdf.shape[0] * 0.01
+
+
+@pytest.mark.parametrize("geodataframes", tests.test_write_geodataframes_params())
+def test_write_geodataframes(geodataframes, tmp_path: Path):
+    """
+    Test write_geodataframes.
+    """
+    assert isinstance(geodataframes, dict)
+    assert tmp_path.exists()
+    assert tmp_path.is_dir()
+    export.write_geodataframes(geodataframes, export_folder=tmp_path)
