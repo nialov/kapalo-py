@@ -11,7 +11,8 @@ from typing import List
 import typer
 from PIL import Image
 
-from kapalo_py import export, kapalo_map, setup_module_logging, utils
+from kapalo_py import export, kapalo_map, utils
+from kapalo_py.logger import setup_module_logging
 
 app = typer.Typer()
 
@@ -92,7 +93,9 @@ def _setup_logging(logging_level: LoggingLevel):
 
 
 @app.callback()
-def setup_logging(logging_level: LoggingLevel = typer.Option(LoggingLevel.WARNING)):
+def setup_logging(
+    logging_level: LoggingLevel = typer.Option(LoggingLevel.WARNING.value),
+):
     """
     Kapalo data extraction and processing.
     """
