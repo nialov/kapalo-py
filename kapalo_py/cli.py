@@ -4,18 +4,14 @@ Command line integration.
 import configparser
 import logging
 import subprocess
-import sys
 from enum import Enum, unique
 from pathlib import Path
 from typing import List
 
-import structlog
 import typer
 from PIL import Image
-from pythonjsonlogger import jsonlogger
-from structlog.stdlib import get_logger
 
-from kapalo_py import export, kapalo_map, utils
+from kapalo_py import export, kapalo_map, setup_module_logging, utils
 
 app = typer.Typer()
 
@@ -38,8 +34,6 @@ DATA_IMGS_DIR_PATH = f"data/{IMGS_DIR}"
 LOCAL_STYLESHEET = f"{Path(__file__).parent.parent.resolve()}/styles.css"
 INDEX_HTML = "index.html"
 MAPCONFIG = "mapconfig.ini"
-
-LOGGING_JSON_INDENT = 2
 
 
 @unique
@@ -85,58 +79,16 @@ def read_config(config_path: Path) -> utils.MapConfig:
     )
 
 
-def _setup_logging(
-    logging_level: LoggingLevel = LoggingLevel.WARNING,
-    json_indent: int = LOGGING_JSON_INDENT,
-):
+def _setup_logging(logging_level: LoggingLevel):
     """
-    Set up logging level from cli option.
-
-    Default is WARNING.
+    Set up logging from command-line options.
     """
     logging_level_int = getattr(logging, logging_level.value, None)
     if not isinstance(logging_level_int, int):
         raise TypeError(
             f"Expected logging_level to be an attribute of logging. Got: {logging_level}."
         )
-
-    # Set up structlog logging
-    structlog.configure(
-        processors=[
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.filter_by_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.UnicodeDecoder(),
-            structlog.stdlib.render_to_log_kwargs,
-        ],
-        context_class=dict,
-        wrapper_class=structlog.make_filtering_bound_logger(
-            min_level=logging_level_int - 10,
-        ),
-        cache_logger_on_first_use=True,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-    )
-
-    # Set up stdlib logging
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(jsonlogger.JsonFormatter(json_indent=json_indent))
-    root_logger = logging.getLogger()
-    root_logger.addHandler(handler)
-    root_logger.setLevel(logging_level_int)
-
-    logging.info(
-        "Set up stdlib logging.",
-        extra=dict(logging_level=logging_level, logging_level_int=logging_level_int),
-    )
-
-    logger = get_logger()
-    logger.info(
-        "Set up logging level for kapalo-py.",
-        logging_level=logging_level,
-        logging_level_int=logging_level_int,
-    )
+    setup_module_logging(logging_level_int=logging_level_int)
 
 
 @app.callback()

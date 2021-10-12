@@ -2,7 +2,6 @@
 Utilities for exporting kapalo data.
 """
 
-import logging
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
@@ -79,17 +78,17 @@ def export_projects_to_geodataframes(
     """
     Export kapalo projects to folder.
     """
-    logging.info(f"Reading sqlite files at {kapalo_sqlite_path}.")
+    logger.info("Reading sqlite files.", kapalo_sqlite_path=kapalo_sqlite_path)
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
-    logging.info(f"Gathering project observations from projects: {projects}.")
+    logger.info(f"Gathering project observations from projects: {projects}.")
     (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
         kapalo_tables, projects=projects, exceptions=map_config.exceptions
     )
 
     observations_flat = list(chain(*all_observations))
     if len(observations_flat) == 0:
-        logging.warning("No Observations gathered/found.")
+        logger.warning("No Observations gathered/found.")
         return dict()
 
     return compile_type_dataframes(
@@ -120,7 +119,10 @@ def compile_type_dataframes(
     # Iterate over chosen observation types
     for observation_type in observation_types:
 
-        logging.info(f"Compiling dataframe from observation_type {observation_type}.")
+        logger.info(
+            "Compiling dataframe from observation_type",
+            observation_type=observation_type,
+        )
         geodataframe = compile_type_dataframe(
             observations=observations, observation_type=observation_type
         )
@@ -131,17 +133,20 @@ def compile_type_dataframes(
             if isinstance(point, Point)
         ]
 
-        logging.debug("Asserting that all geometries are points.")
+        logger.debug("Asserting that all geometries are points.")
         assert len(points) == geodataframe.shape[0]
 
-        logging.info("Adding x and y columns.")
+        logger.info("Adding x and y columns.")
         geodataframe["x"] = [point.x for point in points]
         geodataframe["y"] = [point.y for point in points]
 
-        logging.info("Performing declination fix on direction columns.")
+        logger.info(
+            "Performing declination fix on direction columns.",
+            declination_value=declination_value,
+        )
         for column in schema_inference.AZIMUTH_COLUMNS:
             if column in geodataframe.columns:
-                logging.info(
+                logger.info(
                     f"Applying declination fix to column: {column} with"
                     f" declination_value of {declination_value}."
                 )
@@ -165,13 +170,14 @@ def write_geodataframes(
     """
     Write GeoDataFrame datasets to export_folder.
     """
-    logging.info(f"Creating export directory at {export_folder}.")
+    logger.info("Creating export directory", export_folder=export_folder)
     export_folder.mkdir(exist_ok=True)
     for observation_type, geodataframe in geodataframes.items():
 
         if geodataframe.empty or geodataframe.shape[0] == 0:
-            logging.warning(
-                f"Empty geodataframe for observation_type {observation_type}."
+            logger.warning(
+                "Empty geodataframe for observation_type",
+                observation_type=observation_type,
             )
             continue
 
