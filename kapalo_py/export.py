@@ -10,10 +10,13 @@ from typing import Dict, List, Sequence, Tuple
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
+from structlog import get_logger
 
 from kapalo_py import kapalo_map, schema_inference, utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import Columns
+
+logger = get_logger()
 
 
 def compile_type_dataframe(
@@ -154,3 +157,37 @@ def compile_type_dataframes(
         geodataframes[observation_type] = geodataframe
 
     return geodataframes
+
+
+def write_geodataframes(
+    geodataframes: Dict[str, gpd.GeoDataFrame], export_folder: Path
+):
+    """
+    Write GeoDataFrame datasets to export_folder.
+    """
+    logging.info(f"Creating export directory at {export_folder}.")
+    export_folder.mkdir(exist_ok=True)
+    for observation_type, geodataframe in geodataframes.items():
+
+        if geodataframe.empty or geodataframe.shape[0] == 0:
+            logging.warning(
+                f"Empty geodataframe for observation_type {observation_type}."
+            )
+            continue
+
+        dataframe_path = Path(export_folder / f"{observation_type}.csv")
+        geodataframe_path = Path(export_folder / f"{observation_type}.gpkg")
+
+        logger.info(
+            "Saving (Geo)DataFrames.",
+            dataframe_path=dataframe_path,
+            geodataframe_path=geodataframe_path,
+        )
+        write_geodataframe(
+            geodataframe=geodataframe,
+            dataframe_path=dataframe_path,
+            geodataframe_path=geodataframe_path,
+        )
+
+        assert dataframe_path.exists()
+        assert geodataframe_path.exists()
