@@ -78,11 +78,6 @@ def setup_module_logging(
     root_logger.addHandler(handler)
     root_logger.setLevel(logging_level_int)
 
-    logging.info(
-        "Set up stdlib logging.",
-        extra=dict(logging_level_int=logging_level_int),
-    )
-
     logger = get_logger()
     logger.info(
         "Set up logging level for kapalo-py.",
