@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased (2021-10-11)
+## Unreleased (2021-10-12)
 
 #### New Features
+
+-   (cli): set up stdlib and structlog logging
 
 -   (cli): add logging setup
 
