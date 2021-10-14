@@ -22,6 +22,8 @@
 
 #### Fixes
 
+-   (schema_inference): add horizontal sense column
+
 -   (logger): finalize logging setup
 
 -   add module wide logging setup
