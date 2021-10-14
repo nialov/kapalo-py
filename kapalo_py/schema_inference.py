@@ -42,6 +42,8 @@ class Columns:
     ROP_GID = "ROP_GID"
     ST_1 = "ST_1"
     ST_2 = "ST_2"
+    H_SENCE = "H_SENCE"
+    H_SENCE_TEXT = "H_SENCE_TEXT"
 
 
 AZIMUTH_COLUMNS = (Columns.DIP_DIRECTION, Columns.DIRECTION)
@@ -53,6 +55,8 @@ PLANAR_COLUMNS = (
     Columns.STYPE_TEXT,
     Columns.FOL_TYPE_TEXT,
     Columns.STYPE,
+    Columns.H_SENCE,
+    Columns.H_SENCE_TEXT,
 )
 LINEAR_COLUMNS = (
     Columns.REMARKS,

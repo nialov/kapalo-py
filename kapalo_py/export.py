@@ -2,6 +2,7 @@
 Utilities for exporting kapalo data.
 """
 
+import logging
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
@@ -9,13 +10,10 @@ from typing import Dict, List, Sequence, Tuple
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
-from structlog import get_logger
 
 from kapalo_py import kapalo_map, schema_inference, utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import Columns
-
-logger = get_logger()
 
 
 def compile_type_dataframe(
@@ -78,17 +76,24 @@ def export_projects_to_geodataframes(
     """
     Export kapalo projects to folder.
     """
-    logger.info("Reading sqlite files.", kapalo_sqlite_path=kapalo_sqlite_path)
+    logging.info(
+        "Reading sqlite files.",
+        extra=dict(
+            kapalo_sqlite_path=kapalo_sqlite_path,
+        ),
+    )
     kapalo_tables = kapalo_map.read_kapalo_tables(path=kapalo_sqlite_path)
 
-    logger.info(f"Gathering project observations from projects: {projects}.")
+    logging.info(
+        "Gathering project observations from projects.", extra=dict(projects=projects)
+    )
     (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
         kapalo_tables, projects=projects, exceptions=map_config.exceptions
     )
 
     observations_flat = list(chain(*all_observations))
     if len(observations_flat) == 0:
-        logger.warning("No Observations gathered/found.")
+        logging.warning("No Observations gathered/found.")
         return dict()
 
     return compile_type_dataframes(
@@ -119,9 +124,11 @@ def compile_type_dataframes(
     # Iterate over chosen observation types
     for observation_type in observation_types:
 
-        logger.info(
+        logging.info(
             "Compiling dataframe from observation_type",
-            observation_type=observation_type,
+            extra=dict(
+                observation_type=observation_type,
+            ),
         )
         geodataframe = compile_type_dataframe(
             observations=observations, observation_type=observation_type
@@ -133,22 +140,24 @@ def compile_type_dataframes(
             if isinstance(point, Point)
         ]
 
-        logger.debug("Asserting that all geometries are points.")
+        logging.debug("Asserting that all geometries are points.")
         assert len(points) == geodataframe.shape[0]
 
-        logger.info("Adding x and y columns.")
+        logging.info("Adding x and y columns.")
         geodataframe["x"] = [point.x for point in points]
         geodataframe["y"] = [point.y for point in points]
 
-        logger.info(
+        logging.info(
             "Performing declination fix on direction columns.",
-            declination_value=declination_value,
+            extra=dict(
+                declination_value=declination_value,
+            ),
         )
         for column in schema_inference.AZIMUTH_COLUMNS:
             if column in geodataframe.columns:
-                logger.info(
-                    f"Applying declination fix to column: {column} with"
-                    f" declination_value of {declination_value}."
+                logging.info(
+                    "Applying declination fix to column.",
+                    extra=dict(column=column, declination_value=declination_value),
                 )
                 column_values = geodataframe[column]
                 assert column_values is not None
@@ -170,24 +179,28 @@ def write_geodataframes(
     """
     Write GeoDataFrame datasets to export_folder.
     """
-    logger.info("Creating export directory", export_folder=export_folder)
+    logging.info("Creating export directory", extra=dict(export_folder=export_folder))
     export_folder.mkdir(exist_ok=True)
     for observation_type, geodataframe in geodataframes.items():
 
         if geodataframe.empty or geodataframe.shape[0] == 0:
-            logger.warning(
+            logging.warning(
                 "Empty geodataframe for observation_type",
-                observation_type=observation_type,
+                extra=dict(
+                    observation_type=observation_type,
+                ),
             )
             continue
 
         dataframe_path = Path(export_folder / f"{observation_type}.csv")
         geodataframe_path = Path(export_folder / f"{observation_type}.gpkg")
 
-        logger.info(
+        logging.info(
             "Saving (Geo)DataFrames.",
-            dataframe_path=dataframe_path,
-            geodataframe_path=geodataframe_path,
+            extra=dict(
+                dataframe_path=dataframe_path,
+                geodataframe_path=geodataframe_path,
+            ),
         )
         write_geodataframe(
             geodataframe=geodataframe,
