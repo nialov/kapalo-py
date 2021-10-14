@@ -47,9 +47,8 @@ def test__setup_logging(logging_level, will_fail):
     Test _setup_logging.
     """
     try:
-        result = cli._setup_logging(logging_level=logging_level)
+        cli._setup_logging(logging_level=logging_level)
     except Exception:
         if will_fail:
             return
         raise
-    assert result is None

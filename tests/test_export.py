@@ -4,9 +4,7 @@ Tests for export.py.
 
 from pathlib import Path
 
-import geopandas as gpd
 import pytest
-from shapely.geometry import Point
 
 import tests
 from kapalo_py import export, schema_inference, utils
