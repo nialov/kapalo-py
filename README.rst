@@ -3,8 +3,10 @@ Documentation
 
 |Documentation Status| |PyPI Status| |CI Test| |Coverage|
 
-Uses Bedrock of Finland 1:200k from Geological Survey of Finland
-https://hakku.gtk.fi/
+Introduction
+------------
+
+Create webmaps and export kapalo observations as cvs.
 
 Running tests
 -------------
