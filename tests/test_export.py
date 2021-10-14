@@ -4,6 +4,7 @@ Tests for export.py.
 
 from pathlib import Path
 
+import geopandas as gpd
 import pytest
 
 import tests
@@ -35,6 +36,8 @@ def test_export_projects_to_geodataframes(
     )
 
     for result_gdf, default_gdf in zip(result.values(), default_result.values()):
+        assert isinstance(result_gdf, gpd.GeoDataFrame)
+        assert isinstance(default_gdf, gpd.GeoDataFrame)
         assert result_gdf.shape[0] == default_gdf.shape[0]
 
         for col in schema_inference.AZIMUTH_COLUMNS:
@@ -43,6 +46,13 @@ def test_export_projects_to_geodataframes(
                 amount_same = sum(result_gdf[col] == default_gdf[col])
                 # But in this case there's less than 1 % invalid values
                 assert amount_same < result_gdf.shape[0] * 0.01
+
+    # Test that horizontal fault sence is in dataframe
+    planars_gdf = result[utils.PLANAR_TYPE]
+    assert schema_inference.Columns.H_SENCE in planars_gdf.columns
+    assert schema_inference.Columns.H_SENCE_TEXT in planars_gdf.columns
+    assert len(planars_gdf[schema_inference.Columns.H_SENCE_TEXT].unique()) > 1
+    assert len(planars_gdf[schema_inference.Columns.H_SENCE].unique()) > 1
 
 
 @pytest.mark.parametrize("geodataframes", tests.test_write_geodataframes_params())
