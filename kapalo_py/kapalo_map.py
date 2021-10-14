@@ -53,20 +53,6 @@ def sql_table_to_dataframe(table: str, connection: sqlite3.Connection) -> pd.Dat
     return dataframe
 
 
-# def merge_kapalo_tables(tables: Sequence[KapaloTables]) -> KapaloTables:
-#     """
-#     Merge a Sequence of KapaloTables objects.
-#     """
-#     if not all([isinstance(val, KapaloTables) for val in tables]):
-#         raise TypeError("Expected only KapaloTables objects in merge_kapalo_tables.")
-#     first = tables[0]
-#     if len(tables) == 1:
-#         return first
-#     for table in tables[1:]:
-#         first = first + table
-#     return first
-
-
 def read_kapalo_tables(path: Path) -> List[KapaloTables]:
     """
     Read multiple kapalo.sqlite files into a list of KapaloTables.
@@ -564,6 +550,97 @@ def webmap_compilation(
     """
     Compile the web map.
     """
+    logging.info(
+        "Reading sqlite tables into DataFrames and parsing into KapaloTables",
+        extra=dict(kapalo_sqlite_path=kapalo_sqlite_path),
+    )
+    kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
+
+    logging.info(
+        "Creating the folium map.",
+        extra=dict(
+            kapalo_tables_len=len(kapalo_tables),
+            projects=projects,
+            imgs_path=kapalo_imgs_path,
+            map_config=map_config,
+        ),
+    )
+    project_map = create_project_map(
+        kapalo_tables,
+        projects=projects,
+        imgs_path=kapalo_imgs_path,
+        map_config=map_config,
+    )
+
+    project_map = add_extra_map_content(
+        project_map,
+        extra_datasets=extra_datasets,
+        extra_names=extra_names,
+        extra_colors=extra_colors,
+        extra_popup_fields=extra_popup_fields,
+        extra_style_functions=extra_style_functions,
+    )
+
+    logging.info(
+        "Writing and styling folium.Map.",
+        extra=dict(
+            map_save_path=map_save_path,
+            kapalo_imgs_path=kapalo_imgs_path,
+            stylesheet=stylesheet,
+            stylesheet_exists=stylesheet.exists(),
+        ),
+    )
+    project_map = write_and_style_html_map(
+        project_map=project_map,
+        map_save_path=map_save_path,
+        kapalo_imgs_path=kapalo_imgs_path,
+        stylesheet=stylesheet,
+    )
+
+    return project_map
+
+
+def write_and_style_html_map(
+    project_map: folium.Map,
+    map_save_path: Path,
+    kapalo_imgs_path: Path,
+    stylesheet: Path,
+) -> folium.Map:
+    """
+    Write folium.Map to html file and consequently edit the html in the file.
+
+    The edit adds reference to a stylesheet (styles.css).
+    """
+    # Save map to live-mapping repository
+    project_map.save(str(map_save_path))
+
+    replaced_img_paths_html = map_save_path.read_text().replace(
+        str(kapalo_imgs_path), kapalo_imgs_path.name
+    )
+
+    styled_html = add_local_stylesheet(
+        html=replaced_img_paths_html, stylesheet=stylesheet
+    )
+
+    map_save_path.write_text(styled_html)
+
+    # Copy css to local map project
+    path_copy(stylesheet, map_save_path.parent / STYLES_CSS)
+
+    return project_map
+
+
+def add_extra_map_content(
+    project_map: folium.Map,
+    extra_datasets: List[Path],
+    extra_names: List[str],
+    extra_colors: List[str],
+    extra_popup_fields: List[str],
+    extra_style_functions: List[Callable[..., Dict[str, str]]],
+):
+    """
+    Add optional extra content to map.
+    """
     # Resolve if extras geodatasets are added to map
     extras = resolve_extras_inputs(
         extra_datasets=extra_datasets,
@@ -571,20 +648,6 @@ def webmap_compilation(
         extra_popup_fields=extra_popup_fields,
         extra_style_functions=extra_style_functions,
         extra_colors=extra_colors,
-    )
-
-    # Read sqlite tables into DataFrames and parse into KapaloTables
-    kapalo_tables = read_kapalo_tables(path=kapalo_sqlite_path)
-
-    # Path to kapalo images
-    imgs_path = kapalo_imgs_path
-
-    # Create the folium map
-    project_map = create_project_map(
-        kapalo_tables,
-        projects=projects,
-        imgs_path=imgs_path,
-        map_config=map_config,
     )
 
     for extra in extras:
@@ -612,21 +675,5 @@ def webmap_compilation(
     locate_control.LocateControl(
         locateOptions={"enableHighAccuracy": True, "watch": True, "timeout": 100000}
     ).add_to(project_map)
-
-    # Save map to live-mapping repository
-    project_map.save(str(map_save_path))
-
-    replaced_img_paths_html = map_save_path.read_text().replace(
-        str(kapalo_imgs_path), kapalo_imgs_path.name
-    )
-
-    styled_html = add_local_stylesheet(
-        html=replaced_img_paths_html, stylesheet=stylesheet
-    )
-
-    map_save_path.write_text(styled_html)
-
-    # Copy css to local map project
-    path_copy(stylesheet, map_save_path.parent / STYLES_CSS)
 
     return project_map
