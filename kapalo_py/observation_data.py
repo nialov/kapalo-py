@@ -60,6 +60,9 @@ class Observation:
         for attr, schema in zip(attributes, schemas):
             df = getattr(self, attr)
             assert isinstance(df, pd.DataFrame)
+            # Remove duplicate rows from DataFrame
+            df.drop_duplicates(inplace=True)
+            df.reset_index(inplace=True, drop=True)
             assert isinstance(schema, pa.DataFrameSchema)
             try:
                 schema.validate(df, lazy=True)
