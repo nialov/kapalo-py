@@ -143,9 +143,10 @@ def compile_type_dataframes(
         logging.debug("Asserting that all geometries are points.")
         assert len(points) == geodataframe.shape[0]
 
-        logging.info("Adding x and y columns.")
+        logging.info("Adding x, y and z columns.")
         geodataframe["x"] = [point.x for point in points]
         geodataframe["y"] = [point.y for point in points]
+        geodataframe["z"] = [0.0 for _ in points]
 
         logging.info(
             "Performing declination fix on direction columns.",
