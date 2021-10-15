@@ -5,13 +5,13 @@ Utilities for exporting kapalo data.
 import logging
 from itertools import chain
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
+from typing import Callable, Dict, List, Sequence, Tuple
 
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
 
-from kapalo_py import kapalo_map, schema_inference, utils
+from kapalo_py import filter_rules, kapalo_map, schema_inference, utils
 from kapalo_py.observation_data import Observation
 from kapalo_py.schema_inference import Columns
 
@@ -174,6 +174,75 @@ def compile_type_dataframes(
     return geodataframes
 
 
+def filter_invalid_rows(
+    geodataframe: gpd.GeoDataFrame,
+    columns: Dict[str, Callable[..., bool]],
+) -> gpd.GeoDataFrame:
+    """
+    Filter invalid rows from GeoDataFrame.
+    """
+    for col, validator in columns.items():
+        assert isinstance(col, str)
+        assert isinstance(validator, Callable)
+        len_before = geodataframe.shape[0]
+        try:
+            geodataframe = geodataframe.loc[geodataframe[col].apply(validator)]
+        except Exception:
+            logging.error(
+                "Failed to filter geodataframe rows.",
+                exc_info=True,
+                extra=dict(col=col, geodataframe_columns=geodataframe.columns),
+            )
+        len_after = geodataframe.shape[0]
+        logging.info(
+            "Filtering out column data.",
+            extra=dict(
+                col=col,
+                len_before=len_before,
+                len_after=len_after,
+                difference=(len_before - len_after),
+            ),
+        )
+
+    return geodataframe
+
+
+def filter_observation_type_geodataframe(
+    observation_type: str, geodataframe: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    """
+    Filter observation_type geodataframe.
+
+    Has filter rules for **some** observation types, not all.
+    """
+    if geodataframe.empty:
+        return geodataframe
+    if observation_type == utils.PLANAR_TYPE:
+        return filter_invalid_rows(
+            geodataframe=geodataframe,
+            columns={
+                Columns.DIP: filter_rules.filter_dip,
+                Columns.DIP_DIRECTION: filter_rules.filter_dip_dir,
+            },
+        )
+    if observation_type == utils.LINEAR_TYPE:
+        return filter_invalid_rows(
+            geodataframe=geodataframe,
+            columns={
+                Columns.PLUNGE: filter_rules.filter_dip,
+                Columns.DIRECTION: filter_rules.filter_dip_dir,
+            },
+        )
+    return geodataframe
+
+
+def check_for_empty_geodataframe(geodataframe: gpd.GeoDataFrame) -> bool:
+    """
+    Check if geodataframe is empty.
+    """
+    return geodataframe.empty or geodataframe.shape[0] == 0
+
+
 def write_geodataframes(
     geodataframes: Dict[str, gpd.GeoDataFrame], export_folder: Path
 ):
@@ -184,11 +253,29 @@ def write_geodataframes(
     export_folder.mkdir(exist_ok=True)
     for observation_type, geodataframe in geodataframes.items():
 
-        if geodataframe.empty or geodataframe.shape[0] == 0:
+        len_before = geodataframe.shape[0]
+        geodataframe = filter_observation_type_geodataframe(
+            geodataframe=geodataframe, observation_type=observation_type
+        )
+        len_after = geodataframe.shape[0]
+        logging.info(
+            "Filtered data in geodataframe.",
+            extra=dict(
+                observation_type=observation_type,
+                len_before=len_before,
+                len_after=len_after,
+                difference=len_before - len_after,
+            ),
+        )
+        assert len_before >= len_after
+
+        if check_for_empty_geodataframe(geodataframe=geodataframe):
             logging.warning(
                 "Empty geodataframe for observation_type",
                 extra=dict(
                     observation_type=observation_type,
+                    len_before_filter=len_before,
+                    len_after_filter=len_after,
                 ),
             )
             continue
