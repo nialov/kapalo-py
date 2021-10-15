@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2021-10-14)
+## Unreleased (2021-10-15)
 
 #### New Features
 
@@ -21,6 +21,8 @@
 -   (cli): implement image resize
 
 #### Fixes
+
+-   (observation_data): rm duplicate rows
 
 -   (schema_inference): add horizontal sense column
 
