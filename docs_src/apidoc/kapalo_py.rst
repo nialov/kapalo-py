@@ -9,6 +9,7 @@ Submodules
 
    kapalo_py.cli
    kapalo_py.export
+   kapalo_py.filter_rules
    kapalo_py.kapalo_map
    kapalo_py.logger
    kapalo_py.observation_data

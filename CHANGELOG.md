@@ -4,6 +4,8 @@
 
 #### New Features
 
+-   (export): add filter rules before exporting
+
 -   (cli): set up stdlib and structlog logging
 
 -   (cli): add logging setup
