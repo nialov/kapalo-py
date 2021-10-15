@@ -12,27 +12,29 @@ from kapalo_py import export, schema_inference, utils
 
 
 @pytest.mark.parametrize(
-    "kapalo_sqlite_path,projects,map_config,is_empty",
+    "kapalo_sqlite_path,projects,config_path,is_empty",
     tests.test_export_projects_to_geodataframes_params(),
 )
 def test_export_projects_to_geodataframes(
-    kapalo_sqlite_path, projects, map_config, is_empty: bool
+    kapalo_sqlite_path, projects, config_path, is_empty: bool
 ):
     """
     Test export_projects_to_geodataframes.
     """
     result = export.export_projects_to_geodataframes(
-        kapalo_sqlite_path, projects, map_config
+        kapalo_sqlite_path, projects, config_path=config_path
     )
     assert isinstance(result, dict)
+
+    if is_empty:
+        assert len(result) == 0
+        return
 
     if not is_empty:
         assert len(result) > 0
 
-    default_map_config = utils.MapConfig()
-
     default_result = export.export_projects_to_geodataframes(
-        kapalo_sqlite_path, projects, default_map_config
+        kapalo_sqlite_path, projects, None
     )
 
     for result_gdf, default_gdf in zip(result.values(), default_result.values()):

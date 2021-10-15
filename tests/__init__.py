@@ -35,6 +35,8 @@ KURIKKA_GTK_PROJECT = "Kurikka GTK"
 DUMMY_IMG_DIR_PATH = Path("tests/sample_data/empty_imgs_dir")
 DUMMY_IMG_DIR_PATH.mkdir(exist_ok=True, parents=True)
 
+SAMPLE_MAPCONFIG_PATH = Path("tests/sample_data/sample_mapconfig.ini")
+
 
 @lru_cache(maxsize=None)
 def test_add_local_stylesheet_params():
@@ -137,9 +139,15 @@ def test_export_projects_to_geodataframes_params():
         (
             KAPALO_SQL_DIR_PATH_PROJ_KURIKKA_GTK,
             (KURIKKA_GTK_PROJECT,),
-            utils.MapConfig(declination_value=10.0),
+            SAMPLE_MAPCONFIG_PATH,
             False,
-        )
+        ),
+        (
+            Path("~/junk/there/is/nothing/here"),
+            (KURIKKA_GTK_PROJECT,),
+            SAMPLE_MAPCONFIG_PATH,
+            True,
+        ),
     ]
 
 
@@ -181,4 +189,16 @@ def test_write_geodataframes_params():
             ),
         },
         {},
+    ]
+
+
+@lru_cache(maxsize=None)
+def test_read_config_params():
+    """
+    Params for test_read_config.
+    """
+    return [
+        (SAMPLE_MAPCONFIG_PATH, 8.0),
+        (Path("tests/sample_data/sample_declination_config.ini"), 1.0),
+        (None, 0.0),
     ]

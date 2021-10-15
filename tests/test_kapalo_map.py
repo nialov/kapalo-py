@@ -241,7 +241,7 @@ def test_webmap_compilation(
     result = kapalo_map.webmap_compilation(
         kapalo_sqlite_path=sqlite_path,
         kapalo_imgs_path=imgs_path,
-        map_config=utils.MapConfig(),
+        config_path=None,
         stylesheet=tests.STYLE_PATH,
         extra_datasets=extra_datasets,
         extra_names=extra_names,
@@ -257,3 +257,19 @@ def test_webmap_compilation(
     assert len(map_html) > 0
 
     assert isinstance(result, folium.Map)
+
+
+@pytest.mark.parametrize(
+    "config_path,assumed_declination", tests.test_read_config_params()
+)
+def test_read_config(config_path: Path, assumed_declination: float):
+    """
+    Test read_config.
+    """
+    result = kapalo_map.read_config(config_path)
+
+    if config_path is not None and config_path.exists():
+        assert result.declination_value == assumed_declination
+    elif config_path is None:
+        assert result.rechecks == ()
+        assert result.declination_value == 0.0
