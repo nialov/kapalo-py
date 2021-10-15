@@ -5,7 +5,7 @@ Utilities for exporting kapalo data.
 import logging
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Dict, List, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import geopandas as gpd
 import pandas as pd
@@ -71,11 +71,12 @@ def write_geodataframe(
 def export_projects_to_geodataframes(
     kapalo_sqlite_path: Path,
     projects: Sequence[str],
-    map_config: utils.MapConfig,
+    config_path: Optional[Path],
 ) -> Dict[str, gpd.GeoDataFrame]:
     """
     Export kapalo projects to folder.
     """
+    map_config = kapalo_map.read_config(config_path=config_path)
     logging.info(
         "Reading sqlite files.",
         extra=dict(

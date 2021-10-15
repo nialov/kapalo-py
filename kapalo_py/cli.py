@@ -1,12 +1,11 @@
 """
 Command line integration.
 """
-import configparser
 import logging
 import subprocess
 from enum import Enum, unique
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import typer
 from PIL import Image
@@ -16,11 +15,6 @@ from kapalo_py.logger import setup_module_logging
 
 app = typer.Typer()
 
-# mapconfig.ini headers
-EXCEPTIONS = "exceptions"
-RECHECK = "recheck"
-DECLINATION = "declination"
-DECLINATION_VALUE = "declination_value"
 
 # rclone command arguments
 RCLONE = "rclone"
@@ -49,35 +43,6 @@ class LoggingLevel(Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
-
-
-def read_config(config_path: Path) -> utils.MapConfig:
-    """
-    Read mapconfig.ini if it exists.
-    """
-    if not config_path.exists():
-        return utils.MapConfig()
-
-    config_parser = configparser.ConfigParser(allow_no_value=True)
-    # Overwrite reading keys as lowercase
-    config_parser.optionxform = lambda option: option
-    config_parser.read(config_path)
-    assert RECHECK in config_parser
-    rechecks = tuple(config_parser[RECHECK].keys()) if RECHECK in config_parser else ()
-    exceptions = (
-        dict(config_parser[EXCEPTIONS].items())
-        if EXCEPTIONS in config_parser
-        else dict()
-    )
-    declination_value = (
-        float(dict(config_parser[DECLINATION].items())[DECLINATION_VALUE])
-        if DECLINATION in config_parser
-        else 0.0
-    )
-
-    return utils.MapConfig(
-        rechecks=rechecks, exceptions=exceptions, declination_value=declination_value
-    )
 
 
 def _setup_logging(logging_level: LoggingLevel):
@@ -145,12 +110,11 @@ def compile_webmap(
     """
     Compile live-mapping website.
     """
-    map_config = read_config(config_path)
     kapalo_map.webmap_compilation(
         kapalo_sqlite_path=kapalo_sqlite_path,
         kapalo_imgs_path=kapalo_imgs_path,
         map_save_path=map_save_path,
-        map_config=map_config,
+        config_path=config_path,
         projects=projects,
         extra_datasets=extra_datasets,
         extra_names=extra_names,
@@ -176,17 +140,15 @@ def export_observations(
         default="exports",
         dir_okay=True,
     ),
-    config_path: Path = typer.Option(default=MAPCONFIG),
+    config_path: Optional[Path] = typer.Option(default=MAPCONFIG),
 ):
     """
     Export kapalo tables.
     """
-    map_config = read_config(config_path)
-
     geodataframes = export.export_projects_to_geodataframes(
         kapalo_sqlite_path=kapalo_sqlite_path,
         projects=projects,
-        map_config=map_config,
+        config_path=config_path,
     )
 
     export.write_geodataframes(geodataframes=geodataframes, export_folder=export_folder)

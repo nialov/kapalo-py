@@ -2,6 +2,7 @@
 Making spatial maps.
 """
 
+import configparser
 import logging
 import sqlite3
 from functools import lru_cache, partial
@@ -21,6 +22,12 @@ from kapalo_py.observation_data import Observation, create_observation
 from kapalo_py.schema_inference import Columns, GroupTables, KapaloTables, Table
 
 STYLES_CSS = "styles.css"
+
+# mapconfig.ini headers
+EXCEPTIONS = "exceptions"
+RECHECK = "recheck"
+DECLINATION = "declination"
+DECLINATION_VALUE = "declination_value"
 
 
 def path_copy(src: Path, dest: Path):
@@ -57,6 +64,15 @@ def read_kapalo_tables(path: Path) -> List[KapaloTables]:
     """
     Read multiple kapalo.sqlite files into a list of KapaloTables.
     """
+    path_exists = path.exists()
+    path_is_file = path.is_file()
+
+    if not path_exists or path_is_file:
+        logging.error(
+            "Cannot read kapalo tables as path doesn't exist.",
+            extra=dict(path_exists=path_exists, path_is_file=path_is_file, path=path),
+        )
+        return []
     all_tables = []
     for kapalo_sqlite_file in path.iterdir():
         assert kapalo_sqlite_file.is_file()
@@ -538,7 +554,6 @@ def webmap_compilation(
     kapalo_sqlite_path: Path,
     kapalo_imgs_path: Path,
     map_save_path: Path,
-    map_config: utils.MapConfig,
     projects: List[str],
     stylesheet: Path,
     extra_datasets: List[Path],
@@ -546,10 +561,16 @@ def webmap_compilation(
     extra_colors: List[str],
     extra_popup_fields: List[str],
     extra_style_functions: List[Callable[..., Dict[str, str]]],
+    config_path: Optional[Path] = None,
 ) -> folium.Map:
     """
     Compile the web map.
     """
+    logging.info(
+        "Reading map config ini file.",
+        extra=dict(config_path=config_path),
+    )
+    map_config = read_config(config_path=config_path)
     logging.info(
         "Reading sqlite tables into DataFrames and parsing into KapaloTables",
         extra=dict(kapalo_sqlite_path=kapalo_sqlite_path),
@@ -677,3 +698,39 @@ def add_extra_map_content(
     ).add_to(project_map)
 
     return project_map
+
+
+def read_config(config_path: Optional[Path]) -> utils.MapConfig:
+    """
+    Read mapconfig.ini if it exists.
+    """
+    logging.info(
+        "Reading config.",
+        extra=dict(
+            config_path_absolute=config_path
+            if config_path is None
+            else config_path.absolute()
+        ),
+    )
+    if (config_path is None) or (not config_path.exists()):
+        return utils.MapConfig()
+
+    config_parser = configparser.ConfigParser(allow_no_value=True)
+    # Overwrite reading keys as lowercase
+    config_parser.optionxform = lambda option: option
+    config_parser.read(config_path)
+    rechecks = tuple(config_parser[RECHECK].keys()) if RECHECK in config_parser else ()
+    exceptions = (
+        dict(config_parser[EXCEPTIONS].items())
+        if EXCEPTIONS in config_parser
+        else dict()
+    )
+    declination_value = (
+        float(dict(config_parser[DECLINATION].items())[DECLINATION_VALUE])
+        if DECLINATION in config_parser
+        else 0.0
+    )
+
+    return utils.MapConfig(
+        rechecks=rechecks, exceptions=exceptions, declination_value=declination_value
+    )
