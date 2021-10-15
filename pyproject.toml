@@ -57,7 +57,6 @@ isort = {version = "*", optional = true}
 mypy = {version = "*", optional = true}
 Pillow = "^8.3.2"
 pandera = "^0.7.2"
-structlog = "^21.1.0"
 python-json-logger = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
