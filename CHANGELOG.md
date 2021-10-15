@@ -22,6 +22,8 @@
 
 #### Fixes
 
+-   (export): add z-field
+
 -   (observation_data): rm duplicate rows
 
 -   (schema_inference): add horizontal sense column
