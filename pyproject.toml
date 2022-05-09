@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post145.dev0+2e3920a"
+version = "0.0.0.post148.dev0+5cfcf6e"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"
@@ -31,6 +31,9 @@ typer = "0.3.2"
 folium = "^0.12.1"
 Markdown = "^3.3.4"
 tabulate = "^0.8.9"
+Pillow = "*"
+pandera = "^0.7.2"
+python-json-logger = "^2.0.2"
 
 # Extras
 # Coverage
@@ -52,9 +55,6 @@ markupsafe = {version = "2.0.1", optional = true}
 
 # Typecheck
 mypy = {version = "*", optional = true}
-Pillow = "^8.3.2"
-pandera = "^0.7.2"
-python-json-logger = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
 # TODO: copier could be installed outside the poetry environment
