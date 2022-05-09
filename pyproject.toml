@@ -15,8 +15,8 @@ keywords = [
 ]
 # See https://pypi.org/classifiers/
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Scientific/Engineering :: GIS"
+    "Topic :: Scientific/Engineering :: GIS",
+    "Programming Language :: Python :: 3 :: Only"
 ]
 include = ["CHANGELOG.md", "styles.css"]
 
@@ -43,15 +43,12 @@ sphinx-rtd-theme = {version = "*", optional = true}
 nbsphinx = {version = "*", optional = true}
 sphinx-gallery = {version = "*", optional = true}
 sphinx-autodoc-typehints = {version = "*", optional = true}
+sphinx-autobuild = {version = "*", optional = true}
 
-# Linting and formatting
+# Linting
 pylint = {version = "*", optional = true}
 rstcheck = {version = "*", optional = true}
-black = {version = "*", optional = true}
-black-nb = {version = "*", optional = true}
-blacken-docs = {version = "*", optional = true}
-blackdoc = {version = "*", optional = true}
-isort = {version = "*", optional = true}
+markupsafe = {version = "2.0.1", optional = true}
 
 # Typecheck
 mypy = {version = "*", optional = true}
@@ -60,15 +57,17 @@ pandera = "^0.7.2"
 python-json-logger = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
-nox = "*"
-invoke = "*"
-jupyterlab = "*"
-ipython = "*"
-pytest = "*"
-pre-commit = "*"
-bpython = "^0.21"
-hypothesis = "^6.23.1"
+# TODO: copier could be installed outside the poetry environment
+copier = "*"
 colorama = "^0.4.4"
+hypothesis = "^6.23.1"
+doit = "*"
+ipython = "*"
+jupyterlab = "*"
+nox = "*"
+pre-commit = "*"
+pytest = "*"
+toml = "^0.10.2"
 
 [tool.poetry.extras]
 coverage = ["coverage", "coverage-badge"]
@@ -77,17 +76,14 @@ docs = [
     "sphinx-rtd-theme",
     "nbsphinx",
     "sphinx-gallery",
-    "sphinx-autodoc-typehints"
+    "sphinx-autodoc-typehints",
+    "sphinx-autobuild"
 ]
-format-lint = [
+lint = [
     "pylint",
     "rstcheck",
     "sphinx",
-    "black",
-    "black-nb",
-    "isort",
-    "blacken-docs",
-    "blackdoc"
+    "markupsafe",
 ]
 typecheck = ["mypy"]
 
@@ -117,7 +113,7 @@ testpaths =[
     "tests",
     "kapalo_py",
     ]
-addopts = "--doctest-modules --pdbcls=IPython.terminal.debugger:Pdb"
+addopts = "--doctest-modules"
 doctest_optionflags =[
     "NUMBER",
     "NORMALIZE_WHITESPACE",
@@ -137,7 +133,7 @@ fail-under = "9.5"
 output-format = "text"
 
 [tool.pylint.messages_control]
-max-line-length = 90
+max-line-length = 100
 disable = [
     "C0103",
     "C0302",
