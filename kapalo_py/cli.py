@@ -135,6 +135,7 @@ def export_observations(
         default=DATA_SQL_DIR_PATH,
         exists=True,
         file_okay=False,
+        help="Directory containing kapalo sqlite files. Files must end with '.sqlite'.",
     ),
     export_folder: Path = typer.Option(
         default="exports",

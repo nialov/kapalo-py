@@ -74,7 +74,7 @@ def read_kapalo_tables(path: Path) -> List[KapaloTables]:
         )
         return []
     all_tables = []
-    for kapalo_sqlite_file in path.iterdir():
+    for kapalo_sqlite_file in path.glob("*.sqlite"):
         assert kapalo_sqlite_file.is_file()
 
         # Read kapalo.sqlite
