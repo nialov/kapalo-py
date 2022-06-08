@@ -772,6 +772,12 @@ def read_config(config_path: Optional[Path]) -> utils.MapConfig:
     config_projects = (
         tuple(config_parser[PROJECTS].keys()) if PROJECTS in config_parser else ()
     )
+
+    # No quotes allowed in actual project string
+    config_projects = tuple(
+        [proj.replace('"', "").replace("'", "") for proj in config_projects]
+    )
+
     bounds_section = config_parser[BOUNDS] if BOUNDS in config_parser else None
     bounds = None
     epsg = None
