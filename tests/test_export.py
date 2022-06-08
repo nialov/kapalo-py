@@ -16,7 +16,7 @@ from kapalo_py import export, schema_inference, utils
     tests.test_export_projects_to_geodataframes_params(),
 )
 def test_export_projects_to_geodataframes(
-    kapalo_sqlite_path, projects, config_path, is_empty: bool
+    kapalo_sqlite_path, projects, config_path, is_empty: bool, data_regression
 ):
     """
     Test export_projects_to_geodataframes.
@@ -32,6 +32,9 @@ def test_export_projects_to_geodataframes(
 
     if not is_empty:
         assert len(result) > 0
+
+    # Check that export table length does not change
+    data_regression.check(dict(result_length=len(result)))
 
     default_result = export.export_projects_to_geodataframes(
         kapalo_sqlite_path, projects, None
@@ -49,7 +52,7 @@ def test_export_projects_to_geodataframes(
                 # But in this case there's less than 1 % invalid values
                 assert amount_same < result_gdf.shape[0] * 0.01
 
-    # Test that horizontal fault sence is in dataframe
+    # Test that horizontal fault sense is in dataframe
     planars_gdf = result[utils.PLANAR_TYPE]
     assert schema_inference.Columns.H_SENCE in planars_gdf.columns
     assert schema_inference.Columns.H_SENCE_TEXT in planars_gdf.columns

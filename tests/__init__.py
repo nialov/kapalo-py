@@ -36,6 +36,8 @@ DUMMY_IMG_DIR_PATH = Path("tests/sample_data/empty_imgs_dir")
 DUMMY_IMG_DIR_PATH.mkdir(exist_ok=True, parents=True)
 
 SAMPLE_MAPCONFIG_PATH = Path("tests/sample_data/sample_mapconfig.ini")
+SAMPLE_MAPCONFIG_KURIKKA_PATH = Path("tests/sample_data/sample_mapconfig_kurikka.ini")
+SAMPLE_DECL_MAPCONFIG_PATH = Path("tests/sample_data/sample_declination_config.ini")
 
 
 @lru_cache(maxsize=None)
@@ -91,7 +93,7 @@ def test_gather_project_observations_params():
     Params for test_gather_project_observations.
     """
     paths = test_read_kapalo_tables_params()
-    return list(zip(paths, cycle([["Kurikka GTK"]])))
+    return list(zip(paths, cycle([["Kurikka GTK"]]), cycle([None]), cycle([None])))
 
 
 @lru_cache(maxsize=None)
@@ -139,7 +141,7 @@ def test_export_projects_to_geodataframes_params():
         (
             KAPALO_SQL_DIR_PATH_PROJ_KURIKKA_GTK,
             (KURIKKA_GTK_PROJECT,),
-            SAMPLE_MAPCONFIG_PATH,
+            SAMPLE_MAPCONFIG_KURIKKA_PATH,
             False,
         ),
         (
@@ -198,7 +200,13 @@ def test_read_config_params():
     Params for test_read_config.
     """
     return [
-        (SAMPLE_MAPCONFIG_PATH, 8.0),
-        (Path("tests/sample_data/sample_declination_config.ini"), 1.0),
-        (None, 0.0),
+        (
+            SAMPLE_MAPCONFIG_PATH,
+            8.0,
+            ("testproject",),
+            3067,
+            (70000.0, 6650000.0, 160000.0, 6750000.0),
+        ),
+        (SAMPLE_DECL_MAPCONFIG_PATH, 1.0, (), None, None),
+        (None, 0.0, (), None, None),
     ]

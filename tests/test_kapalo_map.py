@@ -3,7 +3,7 @@ Tests for kapalo_map.py.
 """
 
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import folium
 import pytest
@@ -116,16 +116,18 @@ def test_observation_html(fix_observations, fix_images):
 
 
 @pytest.mark.parametrize(
-    "path,projects", tests.test_gather_project_observations_params()
+    "path,projects,bounds,bounds_epsg", tests.test_gather_project_observations_params()
 )
-def test_gather_project_observations(path, projects):
+def test_gather_project_observations(path, projects, bounds, bounds_epsg):
     """
     Test gather_project_observations.
     """
     assert isinstance(projects, list)
     assert isinstance(projects[0], str)
     kapalo_tables = kapalo_map.read_kapalo_tables(path)
-    result = kapalo_map.gather_project_observations(kapalo_tables[0], projects, dict())
+    result = kapalo_map.gather_project_observations(
+        kapalo_tables[0], projects, dict(), bounds=bounds, bounds_epsg=bounds_epsg
+    )
 
     assert isinstance(result, tuple)
     assert isinstance(result[0], list)
@@ -145,15 +147,19 @@ def test_observation_marker(fix_observations, fix_images):
 
 
 @pytest.mark.parametrize(
-    "path,projects", tests.test_gather_project_observations_params()
+    "path,projects,bounds,bounds_epsg", tests.test_gather_project_observations_params()
 )
-def test_gather_project_observations_multiple(path, projects):
+def test_gather_project_observations_multiple(path, projects, bounds, bounds_epsg):
     """
     Test gather_project_observations_multiple.
     """
     kapalo_tables = kapalo_map.read_kapalo_tables(path)
     result = kapalo_map.gather_project_observations_multiple(
-        all_kapalo_tables=kapalo_tables, projects=projects, exceptions=dict()
+        all_kapalo_tables=kapalo_tables,
+        projects=projects,
+        exceptions=dict(),
+        bounds=bounds,
+        bounds_epsg=bounds_epsg,
     )
     assert isinstance(result, tuple)
     assert isinstance(result[0], list)
@@ -161,13 +167,27 @@ def test_gather_project_observations_multiple(path, projects):
 
 
 @pytest.mark.parametrize(
-    "path,projects", tests.test_gather_project_observations_params()
+    "path,projects,bounds,bounds_epsg", tests.test_gather_project_observations_params()
 )
-def test_create_project_map(path, projects, fix_images):
+def test_create_project_map(
+    path, projects, fix_images, bounds, bounds_epsg, data_regression
+):
     """
     Test create_project_map.
     """
+    assert isinstance(bounds, tuple) or bounds is None
+    assert isinstance(bounds_epsg, int) or bounds_epsg is None
     kapalo_tables = kapalo_map.read_kapalo_tables(path)
+
+    # Check that obs table lengths stay same within all tables
+    length_dict = [
+        dict(
+            (idx, tables.observations.shape[0])
+            for idx, tables in enumerate(kapalo_tables)
+        )
+    ]
+    data_regression.check(length_dict)
+
     result = kapalo_map.create_project_map(
         kapalo_tables=kapalo_tables,
         projects=projects,
@@ -260,16 +280,27 @@ def test_webmap_compilation(
 
 
 @pytest.mark.parametrize(
-    "config_path,assumed_declination", tests.test_read_config_params()
+    "config_path,assumed_declination,expected_projects,expected_epsg,expected_bounds",
+    tests.test_read_config_params(),
 )
-def test_read_config(config_path: Path, assumed_declination: float):
+def test_read_config(
+    config_path: Path,
+    assumed_declination: float,
+    expected_projects: Tuple[str, ...],
+    expected_epsg,
+    expected_bounds,
+):
     """
     Test read_config.
     """
-    result = kapalo_map.read_config(config_path)
+    map_config = kapalo_map.read_config(config_path)
 
     if config_path is not None and config_path.exists():
-        assert result.declination_value == assumed_declination
+        assert map_config.declination_value == assumed_declination
+        for expected_proj in expected_projects:
+            assert expected_proj in map_config.projects
+        assert map_config.bounds_epsg == expected_epsg
+        assert map_config.bounds == expected_bounds
     elif config_path is None:
-        assert result.rechecks == ()
-        assert result.declination_value == 0.0
+        assert map_config.rechecks == ()
+        assert map_config.declination_value == 0.0
