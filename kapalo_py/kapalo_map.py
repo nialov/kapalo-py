@@ -14,6 +14,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple
 import folium
 import geopandas as gpd
 import markdown
+import numpy as np
 import pandas as pd
 from folium.plugins import locate_control
 
@@ -171,10 +172,12 @@ def location_centroid(observations: pd.DataFrame) -> Tuple[float, float]:
     """
     Get mean location for project.
     """
-    mean_latitude = observations[Columns.LATITUDE].mean()
-    mean_longitude = observations[Columns.LONGITUDE].mean()
+    mean_latitude = observations[Columns.LATITUDE].dropna().mean()
+    mean_longitude = observations[Columns.LONGITUDE].dropna().mean()
     assert isinstance(mean_latitude, float)
     assert isinstance(mean_longitude, float)
+    assert not np.isnan(mean_latitude)
+    assert not np.isnan(mean_longitude)
     return mean_latitude, mean_longitude
 
 
