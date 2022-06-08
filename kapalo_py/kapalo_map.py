@@ -26,8 +26,15 @@ STYLES_CSS = "styles.css"
 # mapconfig.ini headers
 EXCEPTIONS = "exceptions"
 RECHECK = "recheck"
+PROJECTS = "projects"
 DECLINATION = "declination"
 DECLINATION_VALUE = "declination_value"
+BOUNDS = "bounds"
+EPSG = "epsg"
+XMIN = "xmin"
+XMAX = "xmax"
+YMIN = "ymin"
+YMAX = "ymax"
 
 
 def path_copy(src: Path, dest: Path):
@@ -360,6 +367,8 @@ def gather_project_observations(
     kapalo_tables: KapaloTables,
     projects: Sequence[str],
     exceptions: Dict[str, str],
+    bounds: Optional[Tuple[float, float, float, float]],
+    bounds_epsg: Optional[int],
 ) -> Tuple[List[Observation], KapaloTables]:
     """
     Gather Observations related to projects.
@@ -368,6 +377,17 @@ def gather_project_observations(
         projects=projects
     )
 
+    # Filter extracted observations to minx, miny, maxx, maxy bounds
+    if bounds is not None and bounds_epsg is not None:
+        logging.info(
+            "Filtering observations to bounds.",
+            extra=dict(bounds=bounds, bounds_epsg=bounds_epsg),
+        )
+        filtered_kapalo_tables = filtered_kapalo_tables.filter_observations_to_bounds(
+            bounds=bounds, epsg=bounds_epsg
+        )
+
+    # Convert to Observation instances for easier handling (than dataframes)
     observations = gather_observation_data(
         kapalo_tables=filtered_kapalo_tables, exceptions=exceptions
     )
@@ -423,6 +443,8 @@ def gather_project_observations_multiple(
     all_kapalo_tables: List[KapaloTables],
     projects: Sequence[str],
     exceptions: Dict[str, str],
+    bounds: Optional[Tuple[float, float, float, float]],
+    bounds_epsg: Optional[int],
 ) -> Tuple[List[List[Observation]], List[KapaloTables]]:
     """
     Gather all project observations from multiple KapaloTables.
@@ -434,6 +456,8 @@ def gather_project_observations_multiple(
             kapalo_tables=kapalo_tables,
             projects=projects,
             exceptions=exceptions,
+            bounds=bounds,
+            bounds_epsg=bounds_epsg,
         )
         all_observations.append(observations)
         all_project_tables.append(kapalo_tables)
@@ -477,7 +501,11 @@ def create_project_map(
     Create folium map for project observations.
     """
     all_observations, all_project_tables = gather_project_observations_multiple(
-        kapalo_tables, projects=projects, exceptions=map_config.exceptions
+        kapalo_tables,
+        projects=projects,
+        exceptions=map_config.exceptions,
+        bounds=map_config.bounds,
+        bounds_epsg=map_config.bounds_epsg,
     )
 
     logging.info("Initializing map and centering it on the observations.")
@@ -572,6 +600,14 @@ def webmap_compilation(
     )
     map_config = read_config(config_path=config_path)
     logging.info(
+        "Adding projects from config file to project targets (if specified).",
+        extra=dict(config_projects=map_config.projects, cli_projects=projects),
+    )
+
+    all_projects = list(set([*projects, *map_config.projects]))
+    assert len(all_projects) >= len(projects)
+    assert len(all_projects) >= len(map_config.projects)
+    logging.info(
         "Reading sqlite tables into DataFrames and parsing into KapaloTables",
         extra=dict(kapalo_sqlite_path=kapalo_sqlite_path),
     )
@@ -581,14 +617,14 @@ def webmap_compilation(
         "Creating the folium map.",
         extra=dict(
             kapalo_tables_len=len(kapalo_tables),
-            projects=projects,
+            projects=all_projects,
             imgs_path=kapalo_imgs_path,
             map_config=map_config,
         ),
     )
     project_map = create_project_map(
         kapalo_tables,
-        projects=projects,
+        projects=all_projects,
         imgs_path=kapalo_imgs_path,
         map_config=map_config,
     )
@@ -730,7 +766,31 @@ def read_config(config_path: Optional[Path]) -> utils.MapConfig:
         if DECLINATION in config_parser
         else 0.0
     )
+    config_projects = (
+        tuple(config_parser[PROJECTS].keys()) if PROJECTS in config_parser else ()
+    )
+    bounds_section = config_parser[BOUNDS] if BOUNDS in config_parser else None
+    bounds = None
+    epsg = None
+    if bounds_section is not None:
+        try:
+            xmin = float(bounds_section[XMIN])
+            xmax = float(bounds_section[XMAX])
+            ymin = float(bounds_section[YMIN])
+            ymax = float(bounds_section[YMAX])
+            epsg = int(bounds_section[EPSG])
+            bounds = (xmin, ymin, xmax, ymax)
+        except Exception:
+            logging.error(
+                "Failed to parse bounds section",
+                extra=dict(bounds_section=bounds_section),
+            )
 
     return utils.MapConfig(
-        rechecks=rechecks, exceptions=exceptions, declination_value=declination_value
+        rechecks=rechecks,
+        exceptions=exceptions,
+        declination_value=declination_value,
+        projects=config_projects,
+        bounds=bounds,
+        bounds_epsg=epsg,
     )

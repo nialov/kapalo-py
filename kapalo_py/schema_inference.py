@@ -7,10 +7,12 @@ from enum import Enum, unique
 from itertools import chain
 from typing import Sequence, Tuple
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pandera as pa
 from pandas.core.groupby.generic import DataFrameGroupBy
+from shapely.geometry import Point, box
 
 
 class Columns:
@@ -139,7 +141,9 @@ class KapaloTables:
 
         return KapaloTables(**self_as_dict)
 
-    def filter_observations_to_projects(self, projects: Sequence[str]):
+    def filter_observations_to_projects(
+        self, projects: Sequence[str]
+    ) -> "KapaloTables":
         """
         Filter observations table to project(s).
         """
@@ -147,6 +151,33 @@ class KapaloTables:
 
         self_copy.observations = self.observations.loc[
             np.isin(self.observations[Columns.PROJECT], projects)
+        ]
+
+        return self_copy
+
+    def filter_observations_to_bounds(
+        self, bounds: Tuple[float, float, float, float], epsg: int
+    ) -> "KapaloTables":
+        """
+        Filter observations table to bounds.
+        """
+        self_copy = self.copy()
+
+        points = [
+            Point(x, y)
+            for x, y in zip(
+                self.observations[Columns.LONGITUDE],
+                self.observations[Columns.LATITUDE],
+            )
+        ]
+        points_geoseries = gpd.GeoSeries(points, crs="EPSG:4326")
+        points_geoseries_transformed = points_geoseries.to_crs(epsg=epsg)
+        bounds_polygon = box(*bounds)
+        self_copy.observations = self.observations.loc[
+            [
+                point.intersects(bounds_polygon)
+                for point in points_geoseries_transformed.geometry.values
+            ]
         ]
 
         return self_copy

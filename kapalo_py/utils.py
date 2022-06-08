@@ -30,6 +30,9 @@ class MapConfig:
     rechecks: Tuple[str, ...] = ()
     exceptions: Dict[str, str] = field(default_factory=dict)
     declination_value: float = 0.0
+    projects: Tuple[str, ...] = ()
+    bounds: Optional[Tuple[float, float, float, float]] = None
+    bounds_epsg: Optional[int] = None
 
 
 def add_color(style_dict: Dict[str, str], color: Optional[str]) -> Dict[str, str]:

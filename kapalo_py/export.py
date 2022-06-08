@@ -89,7 +89,11 @@ def export_projects_to_geodataframes(
         "Gathering project observations from projects.", extra=dict(projects=projects)
     )
     (all_observations, _,) = kapalo_map.gather_project_observations_multiple(
-        kapalo_tables, projects=projects, exceptions=map_config.exceptions
+        kapalo_tables,
+        projects=projects,
+        exceptions=map_config.exceptions,
+        bounds=map_config.bounds,
+        bounds_epsg=map_config.bounds_epsg,
     )
 
     observations_flat = list(chain(*all_observations))
