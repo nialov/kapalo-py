@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post171.dev0+0dcf33c"
+version = "0.0.0.post172.dev0+cef704e"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"
@@ -25,15 +25,15 @@ kapalo-py = "kapalo_py.cli:APP"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
-geopandas = "*"
-pandas = "*"
-typer = "*"
-folium = "*"
-Markdown = "*"
-tabulate = "*"
-Pillow = "*"
-pandera = "*"
-python-json-logger = "*"
+geopandas = "~0.11.0"
+pandas = "~1.4.2"
+typer = "~0.4.1"
+folium = "~0.12.1"
+Markdown = "~3.3.7"
+tabulate = "~0.8.10"
+Pillow = "~9.1.1"
+pandera = "~0.11.0"
+python-json-logger = "~2.0.2"
 
 # Extras
 # Coverage
