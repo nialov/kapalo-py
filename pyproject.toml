@@ -21,7 +21,7 @@ classifiers = [
 include = ["CHANGELOG.md", "styles.css"]
 
 [tool.poetry.scripts]
-kapalo-py = "kapalo_py.cli:app"
+kapalo-py = "kapalo_py.cli:APP"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.10.0"
