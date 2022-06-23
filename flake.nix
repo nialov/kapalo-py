@@ -41,6 +41,7 @@
             pastel
             nixFlakes
             poetry-wrapped
+            sqlite
           ];
 
           # Required for building C extensions
