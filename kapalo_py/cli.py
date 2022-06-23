@@ -13,7 +13,7 @@ from PIL import Image
 from kapalo_py import export, kapalo_map, utils
 from kapalo_py.logger import setup_module_logging
 
-app = typer.Typer()
+APP = typer.Typer()
 
 
 # rclone command arguments
@@ -57,7 +57,7 @@ def _setup_logging(logging_level: LoggingLevel):
     setup_module_logging(logging_level_int=logging_level_int)
 
 
-@app.callback()
+@APP.callback()
 def setup_logging(
     logging_level: LoggingLevel = typer.Option(LoggingLevel.WARNING.value),
 ):
@@ -67,7 +67,7 @@ def setup_logging(
     _setup_logging(logging_level=logging_level)
 
 
-@app.command()
+@APP.command()
 def compile_webmap(
     kapalo_sqlite_path: Path = typer.Option(
         default=DATA_SQL_DIR_PATH,
@@ -82,7 +82,7 @@ def compile_webmap(
     ),
     map_save_path: Path = typer.Option(default=Path(INDEX_HTML), dir_okay=False),
     config_path: Path = typer.Option(default=Path(MAPCONFIG)),
-    projects: List[str] = typer.Option(["Kurikka GTK"]),
+    projects: List[str] = typer.Option(...),
     stylesheet: Path = typer.Option(LOCAL_STYLESHEET, exists=True, dir_okay=False),
     extra_datasets: List[Path] = typer.Option(
         [],
@@ -128,7 +128,7 @@ def compile_webmap(
     )
 
 
-@app.command()
+@APP.command()
 def export_observations(
     projects: List[str] = typer.Option(["Kurikka GTK"]),
     kapalo_sqlite_path: Path = typer.Option(
@@ -180,7 +180,7 @@ def _resize_images(
         image.save(new_path)
 
 
-@app.command()
+@APP.command()
 def resize_images(
     origin_dir: Path = typer.Argument(
         DATA_IMGS_DIR_PATH, exists=True, dir_okay=True, file_okay=False
@@ -202,7 +202,7 @@ def resize_images(
     )
 
 
-@app.command()
+@APP.command()
 def remote_update(
     drive: str = typer.Option("nialovdrive"),
     remote_sql_dir: str = typer.Option("kapalo/kapalo_sql"),
