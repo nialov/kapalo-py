@@ -63,7 +63,7 @@ def sql_table_to_dataframe(table: str, connection: sqlite3.Connection) -> pd.Dat
     """
     Read sqlite table to DataFrame.
     """
-    dataframe = pd.read_sql_query(sql=f"SELECT * FROM {table};", con=connection)
+    dataframe = pd.read_sql_query(sql=f"SELECT * FROM {table};", con=connection)  # noqa
     assert isinstance(dataframe, pd.DataFrame)
     return dataframe
 
