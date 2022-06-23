@@ -22,7 +22,7 @@ def compile_type_dataframe(
     """
     Create DataFrame of type observations.
 
-    type is linear or planar.
+    Type is e.g., linear, planar or image data as dataframes.
     """
     type_observations = []
 
@@ -35,7 +35,11 @@ def compile_type_dataframe(
         type_df[Columns.OBS_ID] = observation.obs_id
 
         # Add column with remarks
-        type_df[Columns.REMARKS] = observation.remarks
+        if Columns.REMARKS in type_df.columns:
+            # Conflict occurs with image dataframe
+            type_df[Columns.OBSERVATION_REMARKS] = observation.remarks
+        else:
+            type_df[Columns.REMARKS] = observation.remarks
 
         # Add column with project
         type_df[Columns.PROJECT] = observation.project
@@ -45,6 +49,7 @@ def compile_type_dataframe(
 
         type_observations.append(type_df)
 
+    # Concatenate data from all observations for type
     dataframe = pd.concat(type_observations, ignore_index=True)
 
     assert isinstance(dataframe, pd.DataFrame)

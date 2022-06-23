@@ -47,6 +47,10 @@ class Columns:
     H_SENCE = "H_SENCE"
     H_SENCE_TEXT = "H_SENCE_TEXT"
 
+    # Not a column in sqlite schema
+    # Made for image dataframe exporting
+    OBSERVATION_REMARKS = "OBS_REMARKS"
+
 
 AZIMUTH_COLUMNS = (Columns.DIP_DIRECTION, Columns.DIRECTION)
 

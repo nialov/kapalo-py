@@ -132,6 +132,8 @@ def resolve_tm_gid(tectonics: pd.DataFrame) -> Optional[str]:
             assert isinstance(last, str)
             return last
         return None
+
+    # Only one found which is the expected case
     gdb_id: str = gdb_ids[0]
 
     return gdb_id
