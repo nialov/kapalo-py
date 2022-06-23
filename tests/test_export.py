@@ -59,6 +59,11 @@ def test_export_projects_to_geodataframes(
     assert len(planars_gdf[schema_inference.Columns.H_SENCE_TEXT].unique()) > 1
     assert len(planars_gdf[schema_inference.Columns.H_SENCE].unique()) > 1
 
+    # Test that both image and observation remarks remain in image dataframe
+    images_gdf = result[utils.IMAGES_TYPE]
+    assert schema_inference.Columns.OBSERVATION_REMARKS in images_gdf.columns
+    assert schema_inference.Columns.REMARKS in images_gdf.columns
+
 
 @pytest.mark.parametrize("geodataframes", tests.test_write_geodataframes_params())
 def test_write_geodataframes(geodataframes, tmp_path: Path):

@@ -1,10 +1,30 @@
 """
 Tests for cli entrypoints.
 """
+from traceback import print_tb
+
 import pytest
+from click.testing import Result
+from typer.testing import CliRunner
 
 import tests
 from kapalo_py import cli
+
+CLI_RUNNER = CliRunner()
+
+
+def click_error_print(result: Result) -> None:
+    """
+    Print click result traceback.
+    """
+    if result.exit_code == 0:
+        return
+    assert result.exc_info is not None
+    _, _, tb = result.exc_info
+    # print(err_class, err)
+    print_tb(tb)
+    print(result.output)
+    raise Exception(result.exception)
 
 
 @pytest.mark.parametrize("origin_dir,extension", tests.test__resize_images_params())
@@ -52,3 +72,17 @@ def test__setup_logging(logging_level, will_fail):
         if will_fail:
             return
         raise
+
+
+@pytest.mark.parametrize(
+    "entrypoint",
+    ["compile-webmap", "export-observations", "resize-images", "remote-update"],
+)
+def test_entrypoints(entrypoint: str):
+    """
+    Test simply that entrypoints respond.
+    """
+    result = CLI_RUNNER.invoke(app=cli.APP, args=[entrypoint, "--help"])
+
+    # Raises exception if invocation fails
+    click_error_print(result)
