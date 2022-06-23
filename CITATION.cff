@@ -5,8 +5,8 @@ authors:
 - family-names: Ovaskainen
   given-names: Nikolas
 title: "kapalo-py"
-version: "0.0.0.post148.dev0+5cfcf6e"
-date-released: "2022-05-09"
+version: "0.0.0.post171.dev0+0dcf33c"
+date-released: "2022-06-23"
 keywords:
   - python
   - data
@@ -14,4 +14,3 @@ contact:
   - email: "nikolasovaskainen@gmail.com"
 url: "https://github.com/nialov/kapalo-py"
 repository-code: "https://github.com/nialov/kapalo-py"
-

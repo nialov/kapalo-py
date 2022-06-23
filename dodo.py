@@ -20,8 +20,8 @@ TASK_DEP = "task_dep"
 TARGETS = "targets"
 NAME = "name"
 PARAMS = "params"
-PYTHON_VERSIONS = ["3.9"]
-DEFAULT_PYTHON_VERSION = "3.9"
+PYTHON_VERSIONS = ["3.8", "3.9"]
+DEFAULT_PYTHON_VERSION = "3.8"
 
 # Paths
 

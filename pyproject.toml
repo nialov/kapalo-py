@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapalo-py"
-version = "0.0.0.post148.dev0+5cfcf6e"
+version = "0.0.0.post171.dev0+0dcf33c"
 description = "Kapalo data extraction and processing"
 authors = ["nialov <nikolasovaskainen@gmail.com>"]
 readme = "README.rst"
@@ -24,20 +24,20 @@ include = ["CHANGELOG.md", "styles.css"]
 kapalo-py = "kapalo_py.cli:APP"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.10.0"
-geopandas = "~0.9.0"
-pandas = "~1.2.4"
-typer = "0.3.2"
-folium = "^0.12.1"
-Markdown = "^3.3.4"
-tabulate = "^0.8.9"
+python = ">=3.8,<3.10"
+geopandas = "*"
+pandas = "*"
+typer = "*"
+folium = "*"
+Markdown = "*"
+tabulate = "*"
 Pillow = "*"
-pandera = "^0.7.2"
-python-json-logger = "^2.0.2"
+pandera = "*"
+python-json-logger = "*"
 
 # Extras
 # Coverage
-coverage = {version = "^5.0", optional = true}
+coverage = {version = "*", optional = true}
 coverage-badge = {version = "*", optional = true}
 
 # Docs
@@ -51,7 +51,7 @@ sphinx-autobuild = {version = "*", optional = true}
 # Linting
 pylint = {version = "*", optional = true}
 rstcheck = {version = "*", optional = true}
-markupsafe = {version = "2.0.1", optional = true}
+markupsafe = {version = "*", optional = true}
 
 # Typecheck
 mypy = {version = "*", optional = true}
@@ -59,16 +59,16 @@ mypy = {version = "*", optional = true}
 [tool.poetry.dev-dependencies]
 # TODO: copier could be installed outside the poetry environment
 copier = "*"
-colorama = "^0.4.4"
-hypothesis = "^6.23.1"
+colorama = "*"
+hypothesis = "*"
 doit = "*"
 ipython = "*"
 jupyterlab = "*"
 nox = "*"
 pre-commit = "*"
 pytest = "*"
-toml = "^0.10.2"
-pytest-regressions = "^2.3.1"
+toml = "*"
+pytest-regressions = "*"
 
 [tool.poetry.extras]
 coverage = ["coverage", "coverage-badge"]
@@ -153,7 +153,7 @@ disable = [
 ignore-imports = true
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
