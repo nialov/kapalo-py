@@ -5,8 +5,8 @@ authors:
 - family-names: Ovaskainen
   given-names: Nikolas
 title: "kapalo-py"
-version: "0.0.0.post172.dev0+cef704e"
-date-released: "2022-06-23"
+version: "0.0.0.post178.dev0+4838d08"
+date-released: "2022-08-31"
 keywords:
   - python
   - data
