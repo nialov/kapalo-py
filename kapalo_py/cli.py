@@ -82,7 +82,9 @@ def compile_webmap(
     ),
     map_save_path: Path = typer.Option(default=Path(INDEX_HTML), dir_okay=False),
     config_path: Path = typer.Option(default=Path(MAPCONFIG)),
-    projects: List[str] = typer.Option(...),
+    projects: List[str] = typer.Option(
+        [], help="Indicate project identifiers to extract from kapalo sqlite files."
+    ),
     stylesheet: Path = typer.Option(LOCAL_STYLESHEET, exists=True, dir_okay=False),
     extra_datasets: List[Path] = typer.Option(
         [],
