@@ -257,13 +257,14 @@ def observation_image_markdown(
 
             # Add image and link
             markdown_text_list.append(
-                f"[![{image_caption}]({match_path})]({match_path})\n\n"
+                f"[![{image_caption}]({match_path})]({match_path})\n"
             )
-            markdown_text_list.append(f"*{image_caption}*")
+            # markdown_text_list.append(f"*{image_caption}*")
         else:
 
             # Add only link text
-            markdown_text_list.append(f"\n[{image_caption, image_id}]({match_path})")
+            link_text = f"{image_id}: {image_caption}"
+            markdown_text_list.append(f"\n[{link_text}]({match_path})")
 
     if not all(isinstance(part, str) for part in markdown_text_list):
         logging.error(
@@ -330,7 +331,7 @@ def observation_html(observation: Observation, imgs_path: Optional[Path]) -> str
 
     markdown_text = "".join(markdown_text_list)
 
-    html = markdown.markdown(markdown_text, extensions=["tables"])
+    html = markdown.markdown(markdown_text, extensions=["tables", "markdown_captions"])
 
     html = html.replace("src=", "height=150 src=")
     assert isinstance(html, str)

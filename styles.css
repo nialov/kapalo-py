@@ -14,15 +14,26 @@ td, th {
     padding: 3px;
 }
 
-figure {
-    padding: 5px;
+img {
+    transition: transform .2s; /* Animation */
     margin: auto;
 }
 
+img:hover {
+  transform: scale(2.5); /* (150% zoom - Note: if the zoom is too large, it will go outside of the viewport) */
+  box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
+}
+
+figure {
+    padding: 5px;
+    margin: auto;
+    align: center;
+}
+
 figcaption {
-  background-color: white;
-  color: black;
-  font-style: italic;
-  padding: 2px;
-  text-align: center;
+  /* background-color: white; */
+  /* color: black; */
+  /* font-style: italic; */
+  /* padding: 2px; */
+  /* text-align: center; */
 }
