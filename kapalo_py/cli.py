@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from kapalo_py import export, kapalo_map, utils
 from kapalo_py.logger import setup_module_logging
@@ -175,7 +175,11 @@ def _resize_images(
             continue
 
         # From: https://www.holisticseo.digital/python-seo/resize-image/
-        image = Image.open(image_path)
+        try:
+            image = Image.open(image_path)
+        except UnidentifiedImageError:
+            logging.error(f"Expected {image_path} to be a valid image.", exc_info=True)
+            continue
         width_percent = fixed_width / float(image.size[0])
         height_size = int((float(image.size[1]) * float(width_percent)))
         image = image.resize((fixed_width, height_size), Image.NEAREST)
