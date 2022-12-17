@@ -176,3 +176,4 @@ cython_debug/
 
 # direnv rc. it is created by nix develop
 .envrc
+.pre-commit-cache/

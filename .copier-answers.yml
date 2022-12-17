@@ -1,11 +1,11 @@
 # Changes here will be overwritten by Copier
-_commit: 57d586c
+_commit: f7ca2f8
 _src_path: https://github.com/nialov/nialov-py-template.git
-classifier: "Topic :: Scientific/Engineering :: GIS"
+classifier: 'Topic :: Scientific/Engineering :: GIS'
 description: Kapalo data extraction and processing
 email: nikolasovaskainen@gmail.com
 full_name: Nikolas Ovaskainen
 github_account: nialov
-keywords: data analysis spatial geology
+keyword: data
 package: kapalo_py
 year: 2021
