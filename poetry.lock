@@ -148,7 +148,10 @@ files = [
 [package.dependencies]
 lazy-object-proxy = ">=1.4.0"
 typing-extensions = {version = ">=3.10", markers = "python_version < \"3.10\""}
-wrapt = {version = ">=1.11,<2", markers = "python_version < \"3.11\""}
+wrapt = [
+    {version = ">=1.11,<2", markers = "python_version < \"3.11\""},
+    {version = ">=1.14,<2", markers = "python_version >= \"3.11\""},
+]
 
 [[package]]
 name = "asttokens"
@@ -2081,6 +2084,7 @@ numpy = [
     {version = ">=1.18.5", markers = "platform_machine != \"aarch64\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
     {version = ">=1.19.2", markers = "platform_machine == \"aarch64\" and python_version < \"3.10\""},
     {version = ">=1.20.0", markers = "platform_machine == \"arm64\" and python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -3902,5 +3906,5 @@ typecheck = ["mypy"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.8,<3.10"
-content-hash = "af8cb77deb8a844dcebbf228518a714f90c7fdc4ad76101905a181fee56dceac"
+python-versions = ">=3.8,<3.12"
+content-hash = "2845fdf4526a805e6690958b504f53d413fc9d4a74f00c3abc68bcc10443267f"
